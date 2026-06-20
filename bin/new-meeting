@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # 議事録 Markdown を生成する。
-# - 保存先: <dotfiles>/.cache/meetings/
+# - 保存先: <dotfiles>/.cache/docs/meetings/（.cache はローカル限定・非コミット）
 # - ファイル名: 現在時刻を 15 分単位に丸めた yyyymmddhhmm.md
 # - 既に存在していたらエラー（上書きしない）
 # - 任意の引数はタイトルとして見出しに付く: new-meeting "週次MTG"
@@ -8,7 +8,7 @@
 set -euo pipefail
 
 DOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-MEET_DIR="$DOT/.cache/meetings"
+MEET_DIR="$DOT/.cache/docs/meetings"
 STEP_MIN="${MEETING_STEP_MIN:-15}"
 
 mkdir -p "$MEET_DIR"

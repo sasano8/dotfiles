@@ -22,6 +22,7 @@ link() {
 
 # Claude Code ユーザースキル
 link "claude/skills/memory-bank" "$HOME/.claude/skills/memory-bank"
+link "claude/skills/docs-summary" "$HOME/.claude/skills/docs-summary"
 # Claude Code 設定（秘密は含めない。マシン固有は settings.local.json へ＝非同期）
 link "claude/settings.json" "$HOME/.claude/settings.json"
 # グローバル EditorConfig
