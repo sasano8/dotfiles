@@ -134,10 +134,34 @@ Memory Bank は引き継ぎの正本なので、**「切りのいいところ」
 
 - **コード変更と Memory Bank の更新を 1 コミットにまとめる**（「何を変えたか＋現状＋次の計画」が
   1 コミットで揃う）。
-- 既定では **`main` に直コミットしない**。作業前に branch を切る（既に作業ブランチ上ならそのまま）。
+- **ブランチ方針は config で決める**（下記「コミット設定（config）」）。`branchPolicy: current`（既定）なら
+  **ブランチを切らず現在のブランチ**（`main`/デフォルト含む）へコミット。`new-branch` のときだけ作業前に
+  branch を切る（既に作業ブランチ上ならそのまま）。
 - メッセージは Conventional Commits（`feat:` / `fix:` / `refactor:` / `docs:` / `test:` 等）＋日本語要約で可。
 - **push はユーザーが求めたときだけ**行う（コミットはこまめに、push は明示時）。
 - コミット前に `git status` / `git diff` で意図しない混入（生成物・秘密情報）が無いか確認する。
+
+### コミット設定（config）
+
+ブランチ方針などは **config ファイルを読んで分岐**する（プロセに直書きしない）。コミット前に次の順で解決する:
+
+1. **プロジェクト**: `.work/skills/memory-bank/config.json`（あれば最優先。repo と一緒に commit され方針が repo に同行）。
+2. **グローバル既定**: スキル同梱の `<スキルのベースディレクトリ>/config.default.json`。
+3. **ハードコード既定**: 上記が無い／キー欠落なら `branchPolicy = current`。
+
+スキーマ（JSON）:
+
+````json
+{
+  "commit": {
+    "branchPolicy": "current"   // "current"=ブランチを切らず現在ブランチへ / "new-branch"=作業前に branch を切る
+  }
+}
+````
+
+- グローバル既定は `current`（ブランチを切らない）。ブランチ運用したい repo だけ `.work/skills/memory-bank/config.json`
+  に `"branchPolicy": "new-branch"` を置いて上書きする。
+- config を増やすときも同じ解決順（project → global default → ハードコード）に従う。
 
 > 自動化したい場合：判断（「切りがいいか」）を伴うため Stop フック等での無条件 auto-commit は避ける。
 > どうしてもハードに強制したいなら、コミット漏れを*通知*するだけの非ブロッキングなフックに留める。
