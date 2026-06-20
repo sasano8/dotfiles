@@ -27,13 +27,19 @@ git clone <this repo> ~/projects/dotfiles
 
 ### スキルをツール横断で共有する仕組み
 
-Claude Code と Codex は **同じ `SKILL.md` 形式**（YAML frontmatter の `name` + `description`）。違いは置き場所だけ：
+`SKILL.md`（YAML frontmatter の `name` + `description`）は **Agent Skills オープン標準（agentskills.io）** で、
+多くのエージェントツールが共通で読む。違いは置き場所だけ：
 
-- Claude Code … `~/.claude/skills/<name>/SKILL.md`
-- Codex … `~/.agents/skills/<name>/SKILL.md`（`.agents/skills` が探索パス）
+- Claude Code … `~/.claude/skills/<name>/`（独自パス）
+- **共有標準** … `~/.agents/skills/<name>/` … **Codex / Gemini CLI** などが読む相互運用パス
+  （Gemini は `~/.gemini/skills/` より `~/.agents/skills/` を優先）
 
-そこで正本を `skills/<name>/` に置き、`install.sh` の `link_skill` が両方へ symlink する。スキルを 1 つ追加したら
-`link_skill <name>` を 1 行足すだけで両ツールに反映される。
+正本を `skills/<name>/` に置き、`install.sh` の `link_skill` が両所へ symlink する。スキルを 1 つ追加したら
+`link_skill <name>` を 1 行足すだけで全対応ツールに反映される。`.agents/skills` を読む新ツールは設定不要で拾う。
+
+> Cline / Cursor / Continue / Copilot などは `.agents/skills` ではなく独自のルール/プロンプト形式
+> （`.clinerules`、`.cursor/rules/*.mdc`、Continue の rules、Copilot instructions）を使う。これらへ広げるには
+> SKILL.md を各形式へ変換する必要があり、symlink では共有できない（必要になったら個別に対応）。
 
 ## docs（個人ナレッジベース・ローカル限定）
 

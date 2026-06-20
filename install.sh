@@ -22,10 +22,10 @@ link() {
 
 link_skill() {
   # link_skill <name>: SKILL.md 正本（skills/<name>）を各エージェントツールへ張る。
-  # Claude Code と Codex は同じ SKILL.md 形式（frontmatter name+description）。置き場所だけ違う。
+  # SKILL.md（frontmatter name+description）は Agent Skills 標準（agentskills.io）で共通。
   local name="$1"
-  link "skills/$name" "$HOME/.claude/skills/$name"   # Claude Code
-  link "skills/$name" "$HOME/.agents/skills/$name"    # Codex（.agents/skills が探索パス）
+  link "skills/$name" "$HOME/.claude/skills/$name"   # Claude Code（独自パス）
+  link "skills/$name" "$HOME/.agents/skills/$name"    # 共有標準 .agents/skills: Codex / Gemini CLI 等が読む
 }
 
 # 共有スキル（Claude Code + Codex）
