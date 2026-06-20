@@ -1,25 +1,7 @@
 # 個人グローバル EditorConfig（~/.editorconfig へ symlink）。
-# EditorConfig は編集中ファイルから上位へ辿り、最初の root=true で停止する。
-# これはホーム配下のフォールバック。プロジェクト直下の .editorconfig が優先される。
+# Makefile はレシピ行の先頭がタブ必須（space だと動かない）ため、これだけは規定する。
+# Python など他の言語はフォーマッタ（ruff 等）に任せ、ここでは規定しない（衝突回避）。
 root = true
-
-[*]
-charset = utf-8
-end_of_line = lf
-insert_final_newline = true
-trim_trailing_whitespace = true
-indent_style = space
-indent_size = 4
-
-[*.{js,ts,jsx,tsx,json,jsonc,yml,yaml,html,css,scss,toml}]
-indent_size = 2
-
-[*.py]
-indent_size = 4
 
 [{Makefile,*.mk}]
 indent_style = tab
-
-[*.md]
-# Markdown は末尾2スペース改行を使うことがあるため trailing 削除をしない
-trim_trailing_whitespace = false
