@@ -24,10 +24,22 @@ git clone <this repo> ~/projects/dotfiles
 | パス | symlink 先 | 用途 |
 |------|-----------|------|
 | `skills/<name>/SKILL.md` | `~/.claude/skills/<name>` ＋ `~/.agents/skills/<name>` | エージェントスキル正本。Claude Code と Codex の両方へ張る |
-| `claude/settings.json` | `~/.claude/settings.json` | Claude Code 設定（model / theme / tui）。秘密は含めない |
+| `claude/settings.json` | `~/.claude/settings.json` | Claude Code 設定（model / theme / tui ＋ SessionStart フック）。秘密は含めない |
+| `bin/memory-bank-sessionstart` | （直接参照） | SessionStart フック本体。後述 |
 | `editorconfig` | `~/.editorconfig` | グローバル EditorConfig（ホーム配下のフォールバック） |
 
 現在のスキル: `memory-bank`（Cline 準拠 Memory Bank）, `docs-summary`（`.cache/docs/` を解析して要約生成）。
+
+### SessionStart フック（Memory Bank 自動案内・グローバル）
+
+`claude/settings.json`（= `~/.claude/settings.json`）の `hooks.SessionStart` で、全プロジェクトのセッション
+開始時に `bin/memory-bank-sessionstart` を実行する。プロジェクトに Memory Bank
+（`.work/skills/memory-bank/` または `memory-bank/`）があれば「タスク前に memory-bank スキルで読む」よう
+**文脈注入**し、無ければ **no-op**（何もしない・ログも残さない）。
+
+- コマンドは `$HOME/projects/dotfiles/bin/...` と `$HOME` 相対（dotfiles を別の場所へ置くマシンでは要調整）。
+- 検出時のみ `~/.claude/memory-bank-hook.log` に記録。切り分け時は `MB_HOOK_DEBUG=1` で no-op も記録。
+- 確認: memory bank のあるプロジェクトで新規セッション → 上記ログに行が増える。
 
 > 秘密・認証情報は `.gitignore` で構造的に排除している。マシン固有の設定は
 > `~/.claude/settings.local.json` 等（`*.local` パターンで非同期）に置く。

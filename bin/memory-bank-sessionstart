@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# Claude Code SessionStart フック。
+# プロジェクトに Memory Bank（.work/skills/memory-bank/ など）があれば、
+# 「タスク開始前に memory-bank スキルの手順で読む」よう文脈注入する。
+# 発火は必ずログに残す（動作確認用）。無ければ何もしない（no-op）。
+#
+# stdin: SessionStart の JSON（読み飛ばしてよい）。
+# cwd: $CLAUDE_PROJECT_DIR（無ければ $PWD）。
+set -euo pipefail
+
+cat >/dev/null 2>&1 || true   # stdin を消費（壊れても無視）
+
+proj="${CLAUDE_PROJECT_DIR:-$PWD}"
+log="${MB_HOOK_LOG:-$HOME/.claude/memory-bank-hook.log}"
+
+mb=""
+for d in "$proj/.work/skills/memory-bank" "$proj/memory-bank"; do
+  [ -d "$d" ] && { mb="$d"; break; }
+done
+
+# Memory Bank が無ければ no-op（全プロジェクトで鳴るのでログは残さない。
+# 切り分け時は MB_HOOK_DEBUG=1 で no-op もログする）。
+if [ -z "$mb" ]; then
+  [ "${MB_HOOK_DEBUG:-0}" = "1" ] && {
+    mkdir -p "$(dirname "$log")"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') SessionStart proj=$proj mb=none" >> "$log"
+  }
+  exit 0
+fi
+
+mkdir -p "$(dirname "$log")"
+echo "$(date '+%Y-%m-%d %H:%M:%S') SessionStart proj=$proj mb=$mb" >> "$log"
+
+msg="このプロジェクトには Memory Bank があります（${mb}）。タスク開始前に memory-bank スキルの手順に従い、コアファイル（projectbrief / productContext / activeContext / systemPatterns / techContext / progress）を読んでから着手してください。"
+
+if command -v jq >/dev/null 2>&1; then
+  jq -n --arg c "$msg" '{hookSpecificOutput:{hookEventName:"SessionStart",additionalContext:$c}}'
+else
+  printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"%s"}}\n' "$msg"
+fi
