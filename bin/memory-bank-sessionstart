@@ -12,6 +12,14 @@ cat >/dev/null 2>&1 || true   # stdin を消費（壊れても無視）
 
 proj="${CLAUDE_PROJECT_DIR:-$PWD}"
 log="${MB_HOOK_LOG:-$HOME/.claude/memory-bank-hook.log}"
+log_keep="${MB_HOOK_LOG_KEEP:-500}"   # ログは直近この行数だけ残す
+
+# ログ追記。肥大化しないよう直近 $log_keep 行に切り詰める。
+append_log() {
+  mkdir -p "$(dirname "$log")"
+  echo "$(date '+%Y-%m-%d %H:%M:%S') $*" >> "$log"
+  tail -n "$log_keep" "$log" > "$log.tmp" && mv "$log.tmp" "$log"
+}
 
 mb=""
 for d in "$proj/.work/skills/memory-bank" "$proj/memory-bank"; do
@@ -21,20 +29,16 @@ done
 # Memory Bank が無ければ no-op（全プロジェクトで鳴るのでログは残さない。
 # 切り分け時は MB_HOOK_DEBUG=1 で no-op もログする）。
 if [ -z "$mb" ]; then
-  [ "${MB_HOOK_DEBUG:-0}" = "1" ] && {
-    mkdir -p "$(dirname "$log")"
-    echo "$(date '+%Y-%m-%d %H:%M:%S') SessionStart proj=$proj mb=none" >> "$log"
-  }
+  [ "${MB_HOOK_DEBUG:-0}" = "1" ] && append_log "SessionStart proj=$proj mb=none"
   exit 0
 fi
 
-mkdir -p "$(dirname "$log")"
-echo "$(date '+%Y-%m-%d %H:%M:%S') SessionStart proj=$proj mb=$mb" >> "$log"
+append_log "SessionStart proj=$proj mb=$mb"
 
 msg="このプロジェクトには Memory Bank があります（${mb}）。タスク開始前に memory-bank スキルの手順に従い、コアファイル（projectbrief / productContext / activeContext / systemPatterns / techContext / progress）を読んでから着手してください。"
 
-if command -v jq >/dev/null 2>&1; then
-  jq -n --arg c "$msg" '{hookSpecificOutput:{hookEventName:"SessionStart",additionalContext:$c}}'
-else
-  printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"%s"}}\n' "$msg"
-fi
+# jq に依存せず、JSON 文字列として最低限のエスケープ（\ と "）を行う。
+# パスに改行等は通常含まれない前提。
+esc=${msg//\\/\\\\}
+esc=${esc//\"/\\\"}
+printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"%s"}}\n' "$esc"
