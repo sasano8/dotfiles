@@ -41,6 +41,16 @@ git clone <this repo> ~/projects/dotfiles
 - 検出時のみ `~/.claude/memory-bank-hook.log` に記録。切り分け時は `MB_HOOK_DEBUG=1` で no-op も記録。
 - 確認: memory bank のあるプロジェクトで新規セッション → 上記ログに行が増える。
 
+dotfiles の symlink を使わず settings.json が実体のマシンなどには、`bin/install-claude-hooks.py` で
+フックをマージ注入できる（標準ライブラリのみ）。既定はドライランで**対象ファイルと差分**を表示し、
+`--apply` で書き込む（冪等。既存キーは保持）:
+
+```bash
+bin/install-claude-hooks.py                       # ドライラン（差分のみ）
+bin/install-claude-hooks.py --apply               # 書き込み（.bak を作成）
+bin/install-claude-hooks.py --settings <path> --apply
+```
+
 > 秘密・認証情報は `.gitignore` で構造的に排除している。マシン固有の設定は
 > `~/.claude/settings.local.json` 等（`*.local` パターンで非同期）に置く。
 
