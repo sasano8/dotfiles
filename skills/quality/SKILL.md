@@ -31,12 +31,13 @@ description: プロジェクトの品質規約（uv 強制 / pyproject / ruff・
 |----|--------|-------------------------------|
 | **R1 uv 強制** | 依存管理は uv（`uv sync`/`uv add`/`uv run`、使い捨ては `uvx <tool>@<版>`）。`pip`/素の venv 手順は不可 | `uv.lock` の有無。README/CI/Makefile に `pip install` が無いか。`uv --version` が通るか |
 | **R2 pyproject** | `pyproject.toml` が存在し hatchling ビルド。`[project]`（name/version/requires-python/dependencies）が揃う | ファイル有無と必須キー |
-| **R3 ruff 設定** | `[tool.ruff] line-length=100`、`[tool.ruff.lint] select=["E","F","I","UP","B","SIM"]` | 当該節の有無・値 |
+| **R3 ruff 設定** | `[tool.ruff] line-length=100`・`target-version="py314"`、`[tool.ruff.lint] select=["E","F","I","UP","B","SIM"]` | 当該節の有無・値 |
 | **R4 pytest 設定** | `[tool.pytest.ini_options] testpaths=["tests"] addopts="-ra"`、dev 依存に `pytest>=8.0` | 当該節と dev group |
-| **R5 Makefile** | `format`/`format-check`/`lint`/`test`/`check` を提供。**format は `uvx ruff@<固定版>`**（`RUFF_VERSION` で 1 点管理） | ターゲット有無、ruff がピン留めか（`ruff@x.y.z`） |
+| **R5 Makefile** | `format`/`format-check`/`lint`/`test`/`check` を提供。**format は `uvx ruff@<固定版>`**（`RUFF_VERSION` で 1 点管理。**py314 対応版**＝0.15+ 目安） | ターゲット有無、ruff がピン留めか（`ruff@x.y.z`） |
 | **R6 src レイアウト** | ソースは `src/<package>/`、wheel packages は `["src/<package>"]`、`tests/` 分離 | ディレクトリ構成、`[tool.hatch.build.targets.wheel]` |
 | **R7 .gitignore** | `.venv/` `__pycache__/` `.pytest_cache/` `.ruff_cache/` `dist/`/`*.egg-info/` を無視 | 当該エントリ |
 | **R8 検証緑** | `make check`（`format-check` + `test`）が緑 | 実行結果。落ちる箇所が是正対象 |
+| **R9 Python 3.14+** | `requires-python=">=3.14"`。3.14 は注釈遅延評価（PEP 649）が既定＝**`from __future__ import annotations` を書かない**（自クラス等への前方参照はそのまま valid）。ruff は py314 対応版＋`target-version="py314"` | `requires-python` の値、`from __future__ import annotations` の混入、ruff 版/`target-version` |
 
 > ルールはプロジェクト都合で**安易に緩めない**。例外が要るなら 2.の規約提示で合意してから外す。
 
@@ -69,7 +70,7 @@ description: プロジェクトの品質規約（uv 強制 / pyproject / ruff・
 name = "<name>"
 version = "0.0.1"
 description = ""
-requires-python = ">=3.10"
+requires-python = ">=3.14"
 dependencies = []
 
 [dependency-groups]
@@ -86,6 +87,7 @@ packages = ["src/<package>"]
 
 [tool.ruff]
 line-length = 100
+target-version = "py314"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
@@ -106,8 +108,8 @@ addopts = "-ra"
 # <project> — 開発タスク
 # format は uvx で ruff のバージョンを固定して実行する（環境差を排除）。
 
-# ruff のピン留めバージョン（更新時はここだけ変える）
-RUFF_VERSION := 0.9.1
+# ruff のピン留めバージョン（更新時はここだけ変える。py314 対応版＝0.15+ 目安）
+RUFF_VERSION := 0.15.18
 
 # lint/format/test の対象
 SRC := src tests
@@ -171,4 +173,8 @@ build/
 - **uv 必須。** 是正案に `pip` / 素の `python -m venv` を出さない。
 - 既存ファイルは上書きせず、監査で差分提示 → タスクとして合意の上で直す。
 - ruff のピン版は「最新安定版を 1 つ選んで固定」。存在しないバージョンを書くと R8（`make check`）で落ちる。
+- **Python 3.14+ 前提（R9）**: `from __future__ import annotations` は書かない（3.14 は注釈遅延評価が既定で前方参照は
+  valid）。ruff は `target-version="py314"` が通る版（0.15+ 目安）を選ぶ。0.9 系は py314 未対応で設定パース時に落ちる。
+  なお「不要な future import」を自動で消す lint ルールは無い＝R9 は config（`target-version`/`requires-python`）と
+  本ルールの規約で担保する（監査時に grep で混入を確認）。
 - 他言語対応が要るときは、本スキルに言語別のルール表＋雛形を足して拡張する（スキルは分割しない）。

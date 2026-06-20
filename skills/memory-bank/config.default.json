@@ -1,5 +1,6 @@
 {
   "commit": {
-    "branchPolicy": "current"
+    "branchPolicy": "agent-branch",
+    "agentBranch": "agent"
   }
 }

@@ -33,9 +33,22 @@ if [ -z "$mb" ]; then
   exit 0
 fi
 
-append_log "SessionStart proj=$proj mb=$mb"
+# dir があっても 6 コアが揃っていなければ Memory Bank として機能しない。
+# 「dir はあるのに中身が無い／欠けている」状態を黙って見逃さず、警告して
+# initialize を促す（存在チェックを [ -d ] だけで済ませない＝充足を検証する）。
+core="projectbrief productContext activeContext systemPatterns techContext progress"
+missing=""
+for f in $core; do
+  [ -f "$mb/$f.md" ] || missing="${missing}${missing:+, }$f.md"
+done
 
-msg="このプロジェクトには Memory Bank があります（${mb}）。タスク開始前に memory-bank スキルの手順に従い、コアファイル（projectbrief / productContext / activeContext / systemPatterns / techContext / progress）を読んでから着手してください。"
+if [ -n "$missing" ]; then
+  append_log "SessionStart proj=$proj mb=$mb INCOMPLETE missing=$missing"
+  msg="警告: このプロジェクトの Memory Bank（${mb}）はコアファイルが欠けており、Memory Bank として機能しません（不足: ${missing}）。memory-bank スキルの手順で「initialize memory bank」を実行し、6 コア（projectbrief / productContext / activeContext / systemPatterns / techContext / progress）を揃えてから着手してください。中身を伴わない空ディレクトリだけが残っている場合はそれ自体が異常です。"
+else
+  append_log "SessionStart proj=$proj mb=$mb"
+  msg="このプロジェクトには Memory Bank があります（${mb}）。タスク開始前に memory-bank スキルの手順に従い、コアファイル（projectbrief / productContext / activeContext / systemPatterns / techContext / progress）を読んでから着手してください。"
+fi
 
 # jq に依存せず、JSON 文字列として最低限のエスケープ（\ と "）を行う。
 # パスに改行等は通常含まれない前提。
