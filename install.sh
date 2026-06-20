@@ -1,21 +1,38 @@
 #!/usr/bin/env bash
-# dotfiles のシンボリックリンクを張る（冪等）。
+# dotfiles のシンボリックリンクを張る（冪等・非破壊）。
 # 別マシンでは: git clone <this repo> ~/projects/dotfiles && ~/projects/dotfiles/install.sh
 # 置き場所は任意（スクリプト自身の位置から $DOT を解決する）。
+#
+# 非破壊の原則: 自分が張ったリンク以外は上書きしない。
+#   - 既に正しい先を指す symlink … 何もしない（ok）
+#   - 別の場所を指す symlink（組織管理など） … スキップして警告（FORCE=1 で上書き可）
+#   - symlink でない実体（実ファイル/ディレクトリ） … 常にスキップ（FORCE でも消さない）
+#   - 何も無い … 新規作成
 set -euo pipefail
 
 DOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+FORCE="${FORCE:-0}"
 
 link() {
   # link <target(実体, DOT 相対)> <link(設置先, 絶対)>
   local target="$DOT/$1" linkpath="$2"
-  mkdir -p "$(dirname "$linkpath")"
   if [ -L "$linkpath" ]; then
-    rm "$linkpath"
+    local cur; cur="$(readlink "$linkpath")"
+    if [ "$cur" = "$target" ]; then
+      echo "ok: $linkpath（既に正しい）"
+      return
+    fi
+    if [ "$FORCE" = "1" ]; then
+      rm "$linkpath"
+    else
+      echo "skip: $linkpath は別リンクを指す（-> $cur）。組織管理かもしれないので保持。上書きは FORCE=1。" >&2
+      return
+    fi
   elif [ -e "$linkpath" ]; then
-    echo "skip: $linkpath は既存の実体（symlink でない）。手動で確認してください。" >&2
+    echo "skip: $linkpath は既存の実体（symlink でない）。保持（FORCE でも消さない）。手動確認を。" >&2
     return
   fi
+  mkdir -p "$(dirname "$linkpath")"
   ln -s "$target" "$linkpath"
   echo "linked: $linkpath -> $target"
 }

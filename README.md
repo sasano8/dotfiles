@@ -10,7 +10,14 @@ git clone <this repo> ~/projects/dotfiles
 ~/projects/dotfiles/install.sh
 ```
 
-`install.sh` は冪等。既存の symlink は張り直し、symlink でない実体があればスキップして警告する。
+`install.sh` は冪等かつ**非破壊**。自分が張ったリンク以外は上書きしない：
+
+- 既に正しい先を指す symlink … 何もしない（ok）
+- **別の場所を指す symlink（組織管理など）… 保持してスキップ**（`FORCE=1 ./install.sh` で上書き可）
+- symlink でない実体（実ファイル/ディレクトリ）… 常に保持（FORCE でも消さない）
+- 何も無い … 新規作成
+
+組織が `~/.agents/skills` 等を管理している環境で clone+install しても、既存設定を勝手に壊さない。
 
 ## 中身
 
