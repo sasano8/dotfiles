@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # dotfiles のシンボリックリンクを張る（冪等）。
-# 別マシンでは: git clone <this repo> ~/dotfiles && ~/dotfiles/install.sh
+# 別マシンでは: git clone <this repo> ~/projects/dotfiles && ~/projects/dotfiles/install.sh
+# 置き場所は任意（スクリプト自身の位置から $DOT を解決する）。
 set -euo pipefail
 
 DOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -21,5 +22,9 @@ link() {
 
 # Claude Code ユーザースキル
 link "claude/skills/memory-bank" "$HOME/.claude/skills/memory-bank"
+# Claude Code 設定（秘密は含めない。マシン固有は settings.local.json へ＝非同期）
+link "claude/settings.json" "$HOME/.claude/settings.json"
+# グローバル EditorConfig
+link "editorconfig" "$HOME/.editorconfig"
 
 echo "done."

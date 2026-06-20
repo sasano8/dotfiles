@@ -1,0 +1,21 @@
+# 秘密・認証情報は構造的に排除（誤コミット防止）
+*.credentials*
+.credentials.json
+*credentials*
+*secret*
+*.key
+*.pem
+id_rsa*
+id_ed25519*
+.netrc
+*.token
+
+# マシン固有・ローカル設定（同期しない）
+*.local
+*.local.json
+settings.local.json
+*.bak
+
+# 生成物・履歴
+*_history
+.DS_Store
