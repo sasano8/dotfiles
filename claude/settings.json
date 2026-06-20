@@ -2,6 +2,13 @@
   "model": "opus[1m]",
   "theme": "dark-ansi",
   "tui": "fullscreen",
+  "permissions": {
+    "allow": [
+      "Read(.work/skills/memory-bank/**)",
+      "Edit(.work/skills/memory-bank/**)",
+      "Write(.work/skills/memory-bank/**)"
+    ]
+  },
   "hooks": {
     "SessionStart": [
       {
