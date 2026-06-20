@@ -19,3 +19,6 @@ settings.local.json
 # 生成物・履歴
 *_history
 .DS_Store
+
+# ローカル限定のキャッシュ領域（議事録など。同期・コミットしない）
+.cache/
