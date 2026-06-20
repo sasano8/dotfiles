@@ -1,0 +1,3 @@
+# このプロジェクト(dotfiles)を supervisor にする宣言。配下ワーカーのパスを列挙。
+# パスは dotfiles ルートからの相対（同一 ~/projects 配下を想定）。# でコメント。
+../manystore
