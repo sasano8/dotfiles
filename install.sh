@@ -20,9 +20,17 @@ link() {
   echo "linked: $linkpath -> $target"
 }
 
-# Claude Code ユーザースキル
-link "claude/skills/memory-bank" "$HOME/.claude/skills/memory-bank"
-link "claude/skills/docs-summary" "$HOME/.claude/skills/docs-summary"
+link_skill() {
+  # link_skill <name>: SKILL.md 正本（skills/<name>）を各エージェントツールへ張る。
+  # Claude Code と Codex は同じ SKILL.md 形式（frontmatter name+description）。置き場所だけ違う。
+  local name="$1"
+  link "skills/$name" "$HOME/.claude/skills/$name"   # Claude Code
+  link "skills/$name" "$HOME/.agents/skills/$name"    # Codex（.agents/skills が探索パス）
+}
+
+# 共有スキル（Claude Code + Codex）
+link_skill memory-bank
+link_skill docs-summary
 # Claude Code 設定（秘密は含めない。マシン固有は settings.local.json へ＝非同期）
 link "claude/settings.json" "$HOME/.claude/settings.json"
 # グローバル EditorConfig

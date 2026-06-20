@@ -16,13 +16,24 @@ git clone <this repo> ~/projects/dotfiles
 
 | パス | symlink 先 | 用途 |
 |------|-----------|------|
-| `claude/skills/memory-bank/` | `~/.claude/skills/memory-bank` | Claude Code ユーザースキル（Cline 準拠 Memory Bank） |
-| `claude/skills/docs-summary/` | `~/.claude/skills/docs-summary` | `.cache/docs/` を解析し再整理した要約を `.cache/docs/summary/` に生成 |
+| `skills/<name>/SKILL.md` | `~/.claude/skills/<name>` ＋ `~/.agents/skills/<name>` | エージェントスキル正本。Claude Code と Codex の両方へ張る |
 | `claude/settings.json` | `~/.claude/settings.json` | Claude Code 設定（model / theme / tui）。秘密は含めない |
 | `editorconfig` | `~/.editorconfig` | グローバル EditorConfig（ホーム配下のフォールバック） |
 
+現在のスキル: `memory-bank`（Cline 準拠 Memory Bank）, `docs-summary`（`.cache/docs/` を解析して要約生成）。
+
 > 秘密・認証情報は `.gitignore` で構造的に排除している。マシン固有の設定は
 > `~/.claude/settings.local.json` 等（`*.local` パターンで非同期）に置く。
+
+### スキルをツール横断で共有する仕組み
+
+Claude Code と Codex は **同じ `SKILL.md` 形式**（YAML frontmatter の `name` + `description`）。違いは置き場所だけ：
+
+- Claude Code … `~/.claude/skills/<name>/SKILL.md`
+- Codex … `~/.agents/skills/<name>/SKILL.md`（`.agents/skills` が探索パス）
+
+そこで正本を `skills/<name>/` に置き、`install.sh` の `link_skill` が両方へ symlink する。スキルを 1 つ追加したら
+`link_skill <name>` を 1 行足すだけで両ツールに反映される。
 
 ## docs（個人ナレッジベース・ローカル限定）
 
