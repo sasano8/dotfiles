@@ -49,6 +49,7 @@ link_skill() {
 link_skill memory-bank
 link_skill docs-summary
 link_skill quality
+link_skill supervisor
 # Claude Code 設定（秘密は含めない。マシン固有は settings.local.json へ＝非同期）
 link "claude/settings.json" "$HOME/.claude/settings.json"
 # グローバル EditorConfig
