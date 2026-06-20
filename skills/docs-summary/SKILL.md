@@ -8,6 +8,9 @@ description: .cache/docs/ 配下に放り込んだドキュメント（議事録
 `.cache/docs/` に集めたドキュメント（主に `meetings/` の議事録）を読み、**横断的に再整理した要約**を
 `.cache/docs/summary/` に生成して表示するスキル。
 
+> このスキルは**置いてあるファイルを解析するだけ**（ソースの作成はしない）。議事録などの新規作成は
+> `bin/new-meeting` を使う。
+
 ## 対象（docs ベース）
 
 - 既定: **`~/projects/dotfiles/.cache/docs`**（個人ナレッジベース。`.cache/` はローカル限定＝git 非追跡）。
