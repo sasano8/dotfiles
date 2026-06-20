@@ -36,4 +36,25 @@ link "claude/settings.json" "$HOME/.claude/settings.json"
 # グローバル EditorConfig
 link "editorconfig" "$HOME/.editorconfig"
 
+# スキル共有に未対応のツールを検出して通知（独自のルール/プロンプト形式＝.agents/skills を読まない）。
+# symlink では共有できず、SKILL.md を各形式へ変換する必要がある。
+unsupported=""
+note_unsupported() {
+  # note_unsupported <表示名> <存在判定パス...>
+  local name="$1"; shift
+  local p
+  for p in "$@"; do
+    [ -e "$p" ] && { unsupported="$unsupported $name"; return; }
+  done
+}
+note_unsupported cline    "$HOME/.cline"
+note_unsupported cursor   "$HOME/.cursor" "$HOME/.cursor-server"
+note_unsupported continue "$HOME/.continue"
+note_unsupported copilot  "$HOME/.copilot"
+
+if [ -n "$unsupported" ]; then
+  echo "note: スキル共有に未対応（独自形式・要変換）:${unsupported}" >&2
+  echo "      これらは .agents/skills を読まないため symlink 共有不可。SKILL.md を各形式へ変換が必要。" >&2
+fi
+
 echo "done."
