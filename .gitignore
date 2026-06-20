@@ -22,3 +22,6 @@ settings.local.json
 
 # ローカル限定のキャッシュ領域（議事録など。同期・コミットしない）
 .cache/
+
+# supervisor の配下ワーカー（別リポジトリ。clone/submodule/symlink で配置。親には取り込まない）
+workers/

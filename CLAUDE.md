@@ -9,4 +9,5 @@
 - workers_dir: workers
 
 > `workers_dir` が宣言されていなければ supervisor として動かない（no-op）。
-> 配下は `workers/` に各ワーカーへの symlink を張って宣言する（実体は移動しない）。
+> 配下は `workers/` に各ワーカープロジェクトを置く（clone / submodule / symlink いずれでも）。
+> `workers/` は別リポジトリなので gitignore 済み（親には取り込まない）。
