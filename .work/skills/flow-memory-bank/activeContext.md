@@ -26,6 +26,10 @@
   GC・dedup／非破壊原則／1 コミットで終える）。やりかけの description/L23 もそのまま活かして 1 コミットに。
 
 ## 直近の変更
+- 2026-06-22: **supervisor 配信（下り dispatch）を manystore へ実施**。outbox 回収＝上申なし／状態 clean を確認。
+  manystore の interrupt に info+low-pri instruction を投函: ①過去エスカレ「quality がループから発揮されない」は
+  Stage2 で解決済みと共有、②規約追従（旧 slot `memory-bank/`→`flow-memory-bank/` 移行・上りエスカレ pull 型化・
+  層エイリアス統一）を**急がず**依頼。manystore は UI 開発（M019/M020）進行中で前進優先＝待ち（次回起動で取り込む）。
 - 2026-06-21: **セッション境界を「1 repo = 1 セッション」に確定＋supervisor 起動時 worker roll-up を追加**
   （ユーザー指摘: SessionStart はプロセス単位で、supervisor 起動→プロセス内で worker に切替えると worker には
   再発火せず効かない）。SessionStart フックは絶対パスのグローバル登録なので worker-rooted セッションには効く
