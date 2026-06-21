@@ -9,8 +9,13 @@
 - **M004 Stage1 完了（このサイクル）**: 4 スキルを prefix 改名（role-supervisor_or_worker / flow-memory-bank /
   unit-quality / func-docs-summary）、クロス参照を層エイリアス（`[[flow]]`/`[[role]]`）へ抽象化＝リネーム耐性。
   データ slot は flow-memory-bank へ移行＋旧名互換 symlink、hook 両名検出、settings 両 glob、install.sh に dangling prune。
-- **次**: M004 Stage2（内容再配置: ポリシー flow→role、quality 両建て、エスカレ outbox、フックへ role 判定 1 行）。
-  各マシンで `install.sh` 再実行＋新セッションで新スキル名が有効化される点に注意。
+- **Stage1 活性化済み**: `install.sh` 実行で旧リンク 8 本 prune・新名 4 本リンク（`~/.claude/skills` & `~/.agents/skills`）。
+  新スキル名（role-supervisor_or_worker 等）が有効。
+- **次セッションで M004 Stage2**（内容再配置）。確定済みの方針:
+  - 役割権限は非対称: supervisor→worker（下り）許可／worker→supervisor（上り）禁止＝越権（guard が deny・**コード変更不要**）。
+    即時フィードバック許可、box の受領編集は起きる（完全疎結合は非現実的）。role SKILL/guard 文言を非対称で整える。
+  - quality は両建てにしない: 常に flow→unit の自己点検 1 本。supervisor の横断は worker へ「自己点検せよ」と下り dispatch。
+  - 他: flow の上りエスカレ・境界ポリシーを role へ移動／エスカレ pull 型 outbox を flow に規定／フックへ role 判定 1 行。
 
 ## 旧フォーカス（完了）
 - **`memory clean` の実装を完成（2026-06-21、worker=manystore 経由のユーザー依頼）。** 前セッションで

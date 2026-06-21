@@ -22,9 +22,16 @@
     `func-docs-summary`）。クロス参照を層エイリアスへ抽象化（`[[flow]]`/`[[role]]`＝singleton、葉はフル名）。
     データ slot を `flow-memory-bank` へ移し旧名は互換 symlink（全 worker 移行後に削除）。hook 両名検出・settings 両 glob・
     install.sh に dangling prune。**要: 各マシンで `install.sh` 再実行＋新セッションで新スキル名が有効化**。
-  - **Stage2（未）**: 以下の内容再配置。
+  - **Stage2（未・次セッションで着手）**: 以下の内容再配置。
   - 移動: flow（memory-bank）の「上りエスカレ（向き・境界ポリシー）」を role 層へ。interrupt 機構は flow に残す。
-  - quality は両建て（自己点検＝flow 参照 unit／配下 drift 横断＝role 側）。
+  - **役割の権限は非対称（ユーザー確定 2026-06-22）**: supervisor→worker（下り）は**許可**＝横断展開・dispatch・
+    worker の escalation box への「受領」追記もOK。worker→supervisor（上り）は**禁止＝越権**（guard が deny）。
+    即時フィードバック（worker→agent エスカレ）は開発速度のため許可。完全疎結合は非現実的（box の受領編集等は起きる）
+    が、pull 型なら worker は supervisor 領域に書かないので上りブロックと両立。**guard のコードは既にこの通り＝変更不要**。
+    role SKILL / guard docstring の文言を「下り許可・上り禁止」の非対称で整える（私の言った“worker 不可侵”は言い過ぎ）。
+  - **quality は両建てにしない（ユーザー疑問を受け簡素化）**: `unit-quality` は常に **flow→unit** の自己点検 1 本。
+    supervisor の横断 drift 関心は **role→unit 直参照にせず、worker へ「自分の quality を点検せよ」と下り dispatch**
+    （実点検は worker の flow→unit で走る）。これで role→flow→unit が一貫し「両建て」例外が消える。
   - 依存は上→下のみ。下位から上位/個別実装をハード参照しない（[[skill-no-hard-refs-to-project-impl]]）。
   - 命名プレフィックス導入は影響範囲あり（install.sh は自動検出済みなので追従、CLAUDE.md 参照名の更新が要る）。
   - **worker は既定動作。per-worker の CLAUDE.md 契約は作らない**（中央＝role 既定＋グローバル hook＋guard で賄う）。
