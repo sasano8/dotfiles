@@ -52,7 +52,8 @@ Start → workers_dir 宣言の判定 → 自分の interrupt を取り込み（
 
 1. **エスカレ受信** — 自分の `.work/skills/memory-bank/interrupt/` を [[memory-bank]] の規約で取り込む。
    `from`/`role: worker` のものはワーカーからの上り。
-2. **状態把握** — 配下各ワーカーの memory-bank を読む（何が進行中か／詰まっているか）。
+2. **状態把握** — 配下各ワーカーの memory-bank を読む（何が進行中か／詰まっているか）。あわせて
+   **quality 取り込みの drift を軽く確認**（下記「quality 取り込みの定期チェック」）。
 3. **俯瞰計画** — 配下横断で何を進めるか決める。**優先度は supervisor が確定**（下記）。
 4. **配信（下り）** — 指示は対象ワーカーの **`<worker>/.work/skills/memory-bank/interrupt/`** にメッセージを
    1 ファイル投函（非同期。ワーカーは次回起動時に取り込む）。即時に動かしたいときだけ、worker dir を指定して
@@ -69,6 +70,18 @@ Start → workers_dir 宣言の判定 → 自分の interrupt を取り込み（
   メタ作業（自分の足回り磨き）でワーカーを止めない。メタ改善は溜めて間引いて入れる。
 
 > 原則: supervisor は「自分を磨く」より「配下を進める」。横断判断と配信に徹し、実装はワーカーに委ねる。
+
+## quality 取り込みの定期チェック（drift 監視）
+
+[[quality]] スキルは判断（あるべき姿）の正本を持つが**オンデマンドで自走しない**。**組織の品質方針**
+（supervisor の memory-bank `reference/quality-policy.md`）が配下に取り込まれ続けているかは **supervisor が定期的に確認**する
+（状態把握スイープの一部）。具体的には [[quality]] の **R10（検証規約の取り込み）** を基準に、各 worker（と自身）の
+`techContext.md`「検証コマンド」が方針を **materialize しているか**（`make check` 等・ベタ書き不在・drift 無し）を見る。
+
+- **判断は quality に任せる**（あるべき姿は R10/R5/R8 が正本）。supervisor は「ズレているか」を検知して動かすだけ。
+- **頻度**: 配下の状態把握のたびに軽く確認（毎回フル監査はしない）。ズレを見つけたら worker の interrupt に
+  是正指示を投函（下り）。重い是正は worker 側で [[quality]] を起動して直す。
+- メタ作業に偏らない原則（上記「優先度の判断」）に従い、drift が無ければ何もしない。
 
 ## 配信メッセージ書式（下り：supervisor → worker）
 
