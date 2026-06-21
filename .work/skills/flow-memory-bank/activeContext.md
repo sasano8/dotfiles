@@ -44,11 +44,12 @@
 - リポジトリ調査（README / git log / skills / .gitignore / 未コミット diff）を実施し、各コアへ反映。
 
 ## 次のステップ
-1. **他マシンで `install.sh` 再実行**（Stage1 の新スキル名・Stage2 のフック更新を反映）。旧名互換 symlink は
-   全 worker 移行後に削除。
-2. supervisor として配下 `workers/manystore` を pull 回収（outbox）＋状態確認し、必要なら下り dispatch。
-   または manystore を **flow が pull 型 outbox に対応しているか**（旧 push 型の名残が無いか）軽く確認。
-3. ユーザーの次の指示を受けて作業対象を選定する。
+1. supervisor として配下 `workers/manystore` を pull 回収（outbox）＋状態確認し、必要なら下り dispatch。
+   あわせて manystore の flow が **pull 型 outbox に追従しているか**（旧 push 型エスカレの名残が無いか）軽く確認。
+2. ユーザーの次の指示を受けて作業対象を選定する。
+
+> 他マシンへの `install.sh` 反映は不要（他マシンなし＝2026-06-22 ユーザー確認）。旧名互換 symlink は
+> 全 worker 移行後に削除でよい。
 
 ## 進行中の決定・考慮事項
 - コミット方針は config 未配置のため既定 `agent-branch`（現在ブランチが既に `agent` なのでそのまま積む）。
