@@ -45,11 +45,13 @@ link_skill() {
   link "skills/$name" "$HOME/.agents/skills/$name"    # 共有標準 .agents/skills: Codex / Gemini CLI 等が読む
 }
 
-# 共有スキル（Claude Code + Codex）
-link_skill memory-bank
-link_skill docs-summary
-link_skill quality
-link_skill supervisor
+# 共有スキル（Claude Code + Codex）: skills/ 配下を自動検出して漏れなくリンク。
+# 新規スキルは skills/<name>/SKILL.md を置くだけでよい（あとは install.sh 再実行）。
+# 手書きの一覧を持たないので「行の追記漏れ」が起きない。
+for skill_md in "$DOT"/skills/*/SKILL.md; do
+  [ -e "$skill_md" ] || continue   # マッチ無し（glob 非展開）対策
+  link_skill "$(basename "$(dirname "$skill_md")")"
+done
 # Claude Code 設定（秘密は含めない。マシン固有は settings.local.json へ＝非同期）
 link "claude/settings.json" "$HOME/.claude/settings.json"
 # グローバル EditorConfig

@@ -18,6 +18,12 @@
             "command": "$HOME/projects/dotfiles/bin/memory-bank-sessionstart",
             "timeout": 10,
             "statusMessage": "Memory Bank を確認中..."
+          },
+          {
+            "type": "command",
+            "command": "$HOME/projects/dotfiles/bin/skills-check-sessionstart",
+            "timeout": 10,
+            "statusMessage": "スキルのリンクを確認中..."
           }
         ]
       }

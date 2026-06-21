@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# SessionStart フック: dotfiles の skills/ のうち ~/.claude/skills へ未リンクのものを通知する。
+# 自動修復はしない（install.sh の役割）。「教えるだけ」。漏れに気づける安全網。
+set -euo pipefail
+
+DOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+missing=""
+for skill_md in "$DOT"/skills/*/SKILL.md; do
+  [ -e "$skill_md" ] || continue   # マッチ無し（glob 非展開）対策
+  name="$(basename "$(dirname "$skill_md")")"
+  link="$HOME/.claude/skills/$name"
+  # dotfiles の実体を指す正しい symlink でなければ「未インストール」とみなす。
+  if [ ! -L "$link" ] || [ "$(readlink "$link")" != "$DOT/skills/$name" ]; then
+    missing="${missing} ${name}"
+  fi
+done
+
+[ -z "$missing" ] && exit 0   # 全てリンク済みなら何も出さない
+
+msg="未インストールのスキルがあります:${missing}。"
+msg="${msg} 反映するには \`~/projects/dotfiles/install.sh\` を実行してください（実行後は再起動で /スキル一覧に出ます）。"
+
+# jq に依存せず JSON 文字列を最低限エスケープ（\ と " と改行）。
+esc=${msg//\\/\\\\}
+esc=${esc//\"/\\\"}
+esc=${esc//$'\n'/\\n}
+printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"%s"}}\n' "$esc"
