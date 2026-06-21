@@ -10,6 +10,9 @@ set -euo pipefail
 
 cat >/dev/null 2>&1 || true   # stdin を消費（壊れても無視）
 
+# このスクリプトと同階層の補助ツール（lint-doc-refs 等）を解決する。
+script_dir="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
+
 proj="${CLAUDE_PROJECT_DIR:-$PWD}"
 log="${MB_HOOK_LOG:-$HOME/.claude/memory-bank-hook.log}"
 log_keep="${MB_HOOK_LOG_KEEP:-500}"   # ログは直近この行数だけ残す
@@ -50,8 +53,33 @@ else
   msg="このプロジェクトには Memory Bank があります（${mb}）。タスク開始前に memory-bank スキルの手順に従い、コアファイル（projectbrief / productContext / activeContext / systemPatterns / techContext / progress）を読んでから着手してください。"
 fi
 
-# jq に依存せず、JSON 文字列として最低限のエスケープ（\ と "）を行う。
-# パスに改行等は通常含まれない前提。
+# A: 前セッションから持ち越した未コミット WIP を表面化する（非ブロッキング）。
+# funnel（interrupt 受信箱）をすり抜けて「始めたまま落ちた」中途半端な編集・未記録の
+# 要望は、未コミット変更として残る。種類を問わず毎セッション開始時に必ず可視化し、
+# 「思い出したら気づく」ではなく「毎回機械的に気づく」状態にする（記憶に依存しない検知）。
+if git -C "$proj" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  dirty="$(git -C "$proj" status --porcelain 2>/dev/null || true)"
+  if [ -n "$dirty" ]; then
+    n=$(printf '%s\n' "$dirty" | grep -c . || true)
+    listed=$(printf '%s\n' "$dirty" | head -n 10)
+    append_log "SessionStart proj=$proj WIP=$n"
+    msg="${msg}"$'\n\n'"注意: 前セッションからの未コミット変更が ${n} 件あります（funnel をすり抜けた中途半端な作業／未記録の要望の可能性）。着手前に内容を確認し、完了させてコミットするか、要望なら interrupt へ記録してください:"$'\n'"${listed}"
+  fi
+fi
+
+# B: スキル文書の宙吊り前方参照を lint（skills/ を持つ repo＝dotfiles 等でのみ実行）。
+# 「下記『X』」が指す節が書かれていない、というクラスのバグを決定論的に捕まえる。
+# skills/ が無い repo ではゼロコスト。失敗しても本来の通知は止めない（best-effort）。
+if [ -d "$proj/skills" ] && command -v python3 >/dev/null 2>&1 && [ -x "$script_dir/lint-doc-refs" ]; then
+  refout="$(python3 "$script_dir/lint-doc-refs" "$proj"/skills/*/SKILL.md 2>/dev/null || true)"
+  if [ -n "$refout" ]; then
+    append_log "SessionStart proj=$proj DANGLING_REFS"
+    msg="${msg}"$'\n\n'"注意: スキル文書に宙吊りの前方参照があります（予告した節が未実装の可能性）:"$'\n'"${refout}"
+  fi
+fi
+
+# jq に依存せず、JSON 文字列として最低限のエスケープ（\ と " と改行）を行う。
 esc=${msg//\\/\\\\}
 esc=${esc//\"/\\\"}
+esc=${esc//$'\n'/\\n}
 printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"%s"}}\n' "$esc"

@@ -8,6 +8,12 @@
   GC・dedup／非破壊原則／1 コミットで終える）。やりかけの description/L23 もそのまま活かして 1 コミットに。
 
 ## 直近の変更
+- 2026-06-21: **funnel すり抜けの自動バックストップを 2 つ追加**（「もっと抜けないように」のユーザー要望）。
+  funnel は記憶依存で忘れれば素通りする（今回の `memory clean` 取りこぼしが実例）→ SessionStart フック
+  （`bin/memory-bank-sessionstart`）に **A: 未コミット WIP の表面化**（`git status` dirty を毎起動で通知）と
+  **B: 宙吊り前方参照 lint**（新規 `bin/lint-doc-refs`＝`下記「…」`が指す節の未実装を検出、skills/ 持ち repo のみ）
+  を配線。いずれも非ブロッキング通知。フック JSON は改行エスケープ対応・両 repo で実挙動検証済み。SKILL.md の
+  funnel 節に「自動バックストップ」注記も追加。
 - 2026-06-21: `memory clean` 節を SKILL.md に実装し、半端だった前方参照を解消（上記フォーカス）。
 - 2026-06-21: Memory Bank 6 コア + interrupt/ 受信箱を新規作成（initialize memory bank）。
 - リポジトリ調査（README / git log / skills / .gitignore / 未コミット diff）を実施し、各コアへ反映。

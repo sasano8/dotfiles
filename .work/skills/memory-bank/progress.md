@@ -5,6 +5,8 @@
 - スキル群: `docs-summary` / `memory-bank` / `quality` / `supervisor`。
   - memory-bank に **`memory clean`（畳み込み/GC）節**を実装済み（肥大時の昇格・畳み込み・GC・dedup の保守ワークフロー）。
 - SessionStart フック（`bin/memory-bank-sessionstart` + `bin/install-claude-hooks.py` での注入）。
+  - **funnel すり抜けの自動バックストップ**を内蔵: A=未コミット WIP の表面化（`git status` dirty を通知）／
+    B=宙吊り前方参照 lint（`bin/lint-doc-refs`、skills/ 持ち repo のみ）。記憶非依存で取りこぼしを毎起動検知。
 - supervisor 宣言（`workers_dir: workers`、配下 `manystore` を symlink で配置）。
 - 議事録ツール `bin/new-meeting` と docs-summary（`.cache/docs/`）。
 
@@ -12,6 +14,7 @@
 - M001: 未コミット WIP（SKILL.md ブロッキング化 / sessionstart のコア充足チェック）を確定コミット。
 - M002: supervisor として `workers/manystore` の状態確認と必要なら指示配信。
 - M003: 検証コマンドの整備（shell/Python の最低限のチェック手順の明文化 or スクリプト化）。
+  - 一部着手: `bin/lint-doc-refs`（宙吊り前方参照 lint）を追加。今後ここに他チェックも集約していく。
 
 ## 現状ステータス
 - 2026-06-21: Memory Bank 初期化完了。WIP 2 件のコミットがこのサイクルの主作業。
