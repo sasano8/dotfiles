@@ -33,6 +33,14 @@
     - guard: docstring/deny メッセージを「上り禁止・下り許可」「outbox に積んで pull 回収」へ（判定ロジックは不変）。
     - sessionstart: **role 判定 1 行**を中央注入（supervisor/worker/standalone を構造判定。3 ケース実挙動検証済み）。
   - 残: なし。manystore 移行完了・移行互換撤去済み（他マシン無し）。命名プレフィックス由来の参照更新も追従済み。
+- M005: **スキルドキュメントに OKF（Open Knowledge Format）メタデータを義務化**（ユーザー要望 2026-06-22）。
+  OKF= Google Cloud の markdown+YAML 知識フォーマット（詳細はメモリ `okf-open-knowledge-format`）。必須 frontmatter は
+  `type` のみ／推奨 `title`/`description`/`resource`/`tags`/`timestamp`。本リポ適用の論点（**未決**）:
+  - フィールド: `type` に**種別（role/flow/unit/func）**を入れる案（R11 の「種別は frontmatter で宣言」を実体化）。
+    `name`/`description` は loader 既定で維持。`timestamp`/`tags` は任意とするか。
+  - 置き場所: unit-quality の **新 R12（推奨・構造チェック系）** か R11 拡張か。← ユーザー「一旦中断」で保留。
+  - スコープ: まず SKILL.md 4 本だけか、Memory Bank コア 6 ファイル（現状 frontmatter 皆無）の OKF 化まで広げるか。
+  - 推奨（再開時）: SKILL.md に `type: role|flow|unit|func` 必須を新 R12 で規定。MB コアの OKF 化は別タスクに分離。
 
 ## 現状ステータス
 - 2026-06-22: **M004 Stage2 完了**（内容再配置をファイル単位 5 コミットで実施）。作業ツリーは Memory Bank 更新分のみ。
