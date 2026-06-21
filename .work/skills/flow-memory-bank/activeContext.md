@@ -26,6 +26,12 @@
   GC・dedup／非破壊原則／1 コミットで終える）。やりかけの description/L23 もそのまま活かして 1 コミットに。
 
 ## 直近の変更
+- 2026-06-22: **manystore の slot 移行＋移行互換の全撤去**。supervisor 下りで manystore の
+  `.work/skills/memory-bank/` → `flow-memory-bank/` を `git mv`（履歴保持）し UI config の featured パスも更新、
+  manystore の agent ブランチへコミット。全 worker 移行完了につき dotfiles 側の移行互換（`.work/skills/memory-bank`
+  symlink・settings 旧 glob・hook 旧名検出）を撤去。dispatch ファイルも「移行は supervisor が完了」に更新。
+- 2026-06-22: **R11 にハード参照禁止チェックを追加**（汎用スキルへの固有実装名/パス/literal 混入を grep 検出）。
+  Stage2 で role SKILL に再発させた違反（guard 名指し）を契機に quality 監査の穴を塞いだ。
 - 2026-06-22: **supervisor 配信（下り dispatch）を manystore へ実施**。outbox 回収＝上申なし／状態 clean を確認。
   manystore の interrupt に info+low-pri instruction を投函: ①過去エスカレ「quality がループから発揮されない」は
   Stage2 で解決済みと共有、②規約追従（旧 slot `memory-bank/`→`flow-memory-bank/` 移行・上りエスカレ pull 型化・
@@ -52,8 +58,8 @@
    あわせて manystore の flow が **pull 型 outbox に追従しているか**（旧 push 型エスカレの名残が無いか）軽く確認。
 2. ユーザーの次の指示を受けて作業対象を選定する。
 
-> 他マシンへの `install.sh` 反映は不要（他マシンなし＝2026-06-22 ユーザー確認）。旧名互換 symlink は
-> 全 worker 移行後に削除でよい。
+> 他マシンへの `install.sh` 反映は不要（他マシンなし＝2026-06-22 ユーザー確認）。manystore 移行完了につき
+> 旧名互換（symlink・hook 旧名検出・settings 旧 glob）は 2026-06-22 撤去済み。
 
 ## 進行中の決定・考慮事項
 - コミット方針は config 未配置のため既定 `agent-branch`（現在ブランチが既に `agent` なのでそのまま積む）。

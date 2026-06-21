@@ -25,8 +25,9 @@ append_log() {
 }
 
 mb=""
-# flow-memory-bank が正規名。memory-bank は移行互換（未移行 worker / 旧 symlink）。両方を見る。
-for d in "$proj/.work/skills/flow-memory-bank" "$proj/.work/skills/memory-bank" "$proj/memory-bank"; do
+# flow-memory-bank が正規名（全 worker 移行済み＝旧 slot 名 .work/skills/memory-bank の互換検出は撤去）。
+# $proj/memory-bank はさらに古いルート直下レイアウトの検出（flow が移行を提案する経路）として残す。
+for d in "$proj/.work/skills/flow-memory-bank" "$proj/memory-bank"; do
   [ -d "$d" ] && { mb="$d"; break; }
 done
 
@@ -126,9 +127,7 @@ if [ -n "$workers_dir" ] && [ -d "$proj/$workers_dir" ]; then
     fi
     mbstat="MB:ok"
     wmb=""
-    for d in "$w/.work/skills/flow-memory-bank" "$w/.work/skills/memory-bank"; do
-      [ -d "$d" ] && { wmb="$d"; break; }
-    done
+    [ -d "$w/.work/skills/flow-memory-bank" ] && wmb="$w/.work/skills/flow-memory-bank"
     if [ -n "$wmb" ]; then
       for f in $core; do [ -f "$wmb/$f.md" ] || { mbstat="MB:不完全"; break; }; done
     else

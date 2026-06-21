@@ -50,8 +50,8 @@ func-*  … 単機能ユーティリティ（葉。例: docs-summary）
 - **Stage1（実装済み）**: 4 スキルを prefix 改名（`role-supervisor_or_worker` / `flow-memory-bank` /
   `unit-quality` / `func-docs-summary`）。クロス参照を層エイリアスへ抽象化（`[[flow]]`/`[[role]]` は singleton、
   `[[unit-*]]`/`[[func-*]]` は葉のフル名）＝具体名は frontmatter のみ residし以後のリネームに波及しない。
-  データ slot は `.work/skills/flow-memory-bank/`（旧名は互換 symlink、全 worker 移行後に削除）。
-  hook は両名検出、settings は両 glob、install.sh は dangling 旧リンクを prune。
+  データ slot は `.work/skills/flow-memory-bank/`（**全 worker＝manystore 移行完了。旧名 memory-bank への移行互換
+  ＝symlink・settings 旧 glob・hook 旧名検出は 2026-06-22 に撤去済み**）。install.sh は dangling 旧リンクを prune。
 - **Stage2（実装済み）**: 下記の内容再配置を完了（ポリシー移動・quality 両建て廃止・エスカレ pull outbox・
   開発内ループ明文化・フックへ role 判定 1 行）。コミット `2c…`〜（agent ブランチ、ファイル単位 5 コミット）。
 

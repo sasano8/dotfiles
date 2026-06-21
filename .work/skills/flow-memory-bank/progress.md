@@ -22,8 +22,8 @@
 - M004: スキルを **role / flow / unit / func の 4 レベル**に再編（**Stage1・Stage2 完了**。詳細は systemPatterns）。
   - **Stage1 完了**: 4 スキルを prefix 改名（`role-supervisor_or_worker` / `flow-memory-bank` / `unit-quality` /
     `func-docs-summary`）。クロス参照を層エイリアスへ抽象化（`[[flow]]`/`[[role]]`＝singleton、葉はフル名）。
-    データ slot を `flow-memory-bank` へ移し旧名は互換 symlink（全 worker 移行後に削除）。hook 両名検出・settings 両 glob・
-    install.sh に dangling prune。
+    データ slot を `flow-memory-bank` へ移行。移行互換（旧名 symlink・hook 旧名検出・settings 旧 glob）は全 worker
+    （manystore）移行完了につき **2026-06-22 撤去済み**。install.sh は dangling 旧リンクを prune。
   - **Stage2 完了（2026-06-22）**: 内容再配置をファイル単位 5 コミットで実施。
     - flow: 開発内ループ（開発→自己点検→反復→commit→記録→次）を明文化。上りエスカレを **pull 型 outbox `outbox/`** へ
       （worker は親を知らず自分の outbox に積む。supervisor が回収）。向き/境界ポリシーは role 参照に。
@@ -32,8 +32,7 @@
       quality を下り dispatch（横断監査しない）に。配信 dispatch は flow 内ループの起点だが driver しない旨を明記。
     - guard: docstring/deny メッセージを「上り禁止・下り許可」「outbox に積んで pull 回収」へ（判定ロジックは不変）。
     - sessionstart: **role 判定 1 行**を中央注入（supervisor/worker/standalone を構造判定。3 ケース実挙動検証済み）。
-  - 残: **要 各マシンで `install.sh` 再実行**（dotfiles では Stage1 で活性化済み・他マシンは未）。旧名互換 symlink は
-    全 worker 移行後に削除。命名プレフィックス導入で CLAUDE.md 参照名の更新が要る箇所があれば追従。
+  - 残: なし。manystore 移行完了・移行互換撤去済み（他マシン無し）。命名プレフィックス由来の参照更新も追従済み。
 
 ## 現状ステータス
 - 2026-06-22: **M004 Stage2 完了**（内容再配置をファイル単位 5 コミットで実施）。作業ツリーは Memory Bank 更新分のみ。
