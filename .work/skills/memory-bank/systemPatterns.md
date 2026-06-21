@@ -34,3 +34,26 @@ dotfiles/
 - `bin/memory-bank-sessionstart` → プロジェクトに Memory Bank があれば「読め」と案内（コア充足も検証する方向で改修中）。
 - supervisor フロー: `workers_dir` 列挙 → 各ワーカーの `.work/skills/memory-bank/`（activeContext/progress）を読む
   → interrupt へ指示配信 → エスカレ取り込み。
+
+## 目標アーキテクチャ: スキルを role / flow / unit の 3 レベルに分ける（backlog・未実装）
+
+スキルを役割・手順・観点の 3 レベルに整理し、名前にプレフィックスを付ける（合意済み・実装は M004 で）。
+依存は常に上→下のみ（下位は上位を参照し返さない＝[[skill-no-hard-refs-to-project-impl]] と一致）。
+
+```
+role-*  … 各ロール間のやり取り方法（向き・境界）＋「1 つの共通 flow」への参照を持つ
+flow-*  … 作業の進め方/記憶。エージェント間通信（interrupt 機構）を規定。複数 unit への参照を持つ
+unit-*  … 単一観点の点検指標（葉）
+```
+
+- **role-supervisor_or_worker**（現 `supervisor` を改名・統合）: 既定 worker、`workers_dir` 宣言で supervisor へ昇格。
+  - 行動指針＝「自分の repo 外（親/配下）の中身は直接編集しない」。**唯一の例外＝ interrupt 経由のやり取りだけ許可**。
+    - supervisor は全体俯瞰の知識を持つ → 全体を加味した**下り** interrupt を配下へ。
+    - worker は自分の要望を**上り** interrupt（worker からの要望）として supervisor へ。
+  - 境界の機械強制は `bin/worker-boundary-guard`（dotfiles 実装＝個別層。スキルは原則だけ持つ）。
+  - 現 memory-bank にある「上りエスカレ（向き・境界のポリシー）」はここへ移す。
+- **flow-memory-bank**（現 `memory-bank`）: 6 コア＋サイクル。**interrupt の機構（受信箱・取り込み・書式）を規定**＝
+  役割間通信が起きる“場所”。役割に非依存（role を参照し返さない）。複数 unit を参照。
+- **unit-quality**（現 `quality`）ほか: 単一観点。
+  - quality は 2 つの顔: ①自分の品質を自分のサイクルで点検＝flow から参照する unit／
+    ②supervisor が配下の quality drift を横断監視＝role 側に残す。両建て。

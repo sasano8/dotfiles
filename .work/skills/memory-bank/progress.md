@@ -17,6 +17,13 @@
 - M002: supervisor として `workers/manystore` の状態確認と必要なら指示配信。
 - M003: 検証コマンドの整備（shell/Python の最低限のチェック手順の明文化 or スクリプト化）。
   - 一部着手: `bin/lint-doc-refs`（宙吊り前方参照 lint）を追加。今後ここに他チェックも集約していく。
+- M004: スキルを **role / flow / unit の 3 レベル**に再編（合意済み・大きめの refactor。詳細は systemPatterns）。
+  - 改名: `supervisor`→`role-supervisor_or_worker`（両役割・行動指針・境界を統治、1 flow を参照）／
+    `memory-bank`→`flow-memory-bank`（interrupt 機構を規定、複数 unit を参照）／`quality`→`unit-quality`。
+  - 移動: memory-bank の「上りエスカレ（向き・境界ポリシー）」を role 層へ。interrupt 機構は flow に残す。
+  - quality は両建て（自己点検＝flow 参照 unit／配下 drift 横断＝role 側）。
+  - 依存は上→下のみ。下位から上位/個別実装をハード参照しない（[[skill-no-hard-refs-to-project-impl]]）。
+  - 命名プレフィックス導入は影響範囲あり（install.sh は自動検出済みなので追従、CLAUDE.md 参照名の更新が要る）。
 
 ## 現状ステータス
 - 2026-06-21: Memory Bank 初期化完了。WIP 2 件のコミットがこのサイクルの主作業。

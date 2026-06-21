@@ -1,6 +1,14 @@
 # Active Context
 
-## 現在のフォーカス
+## 現在のフォーカス（2026-06-22）
+- **worker 越境の機械強制（guard）＋スキル taxonomy の合意**。manystore（worker）セッションでスキル更新を命じた
+  結果、symlink 越しに親（dotfiles）の正本が書き換わり親に WIP が残った事象を起点に、(1) `bin/worker-boundary-guard`
+  （PreToolUse・worker からの親正本書き込みを deny、4 ケース検証済み）を実装し settings.json に配線、(2) supervisor
+  SKILL を**プロジェクト非依存**に直す（`bin/...`/`dotfiles` 直書きを排除＝[[skill-no-hard-refs-to-project-impl]]）。
+  さらにスキルを **role/flow/unit の 3 レベル**に再編する設計に合意（実装は backlog M004）。
+- **未確定**: guard＋settings＋supervisor SKILL の差分はコミット保留中（taxonomy 再編に吸収するか単独確定するか判断待ち）。
+
+## 旧フォーカス（完了）
 - **`memory clean` の実装を完成（2026-06-21、worker=manystore 経由のユーザー依頼）。** 前セッションで
   `memory clean` の配線（description キーワード＋起動時チェック L23 の前方参照「下記『メモリークリーン』」）
   だけ入れて**本体の節を書かずに中断・未コミット**だった。この壊れた前方参照を解消すべく、SKILL.md に
