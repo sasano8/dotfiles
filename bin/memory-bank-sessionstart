@@ -78,6 +78,40 @@ if [ -d "$proj/skills" ] && command -v python3 >/dev/null 2>&1 && [ -x "$script_
   fi
 fi
 
+# C: supervisor 起動時のワーカー roll-up。
+# SessionStart はプロセス単位の起動イベントで、起動時の CLAUDE_PROJECT_DIR にしか効かない
+# ＝1 プロセス内で worker に「コンテキストスイッチ」しても再発火しない。運用は
+# 「1 repo = 1 セッション」（worker 作業は worker を cwd にした別セッションで起動）を前提とし、
+# その代わり supervisor 起動時に配下 worker の状態（未コミット WIP / Memory Bank 充足）を
+# 一覧表示して dispatch 判断を助ける。supervisor 宣言（CLAUDE.md の workers_dir）がある repo のみ。
+workers_dir=""
+if [ -f "$proj/CLAUDE.md" ]; then
+  workers_dir="$(grep -oE 'workers_dir:[[:space:]]*[A-Za-z0-9._/-]+' "$proj/CLAUDE.md" 2>/dev/null | head -n1 | sed -E 's/.*workers_dir:[[:space:]]*//' || true)"
+fi
+if [ -n "$workers_dir" ] && [ -d "$proj/$workers_dir" ]; then
+  roll=""
+  for w in "$proj/$workers_dir"/*; do
+    [ -e "$w" ] || continue
+    wname="$(basename "$w")"
+    if git -C "$w" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+      wn="$(git -C "$w" status --porcelain 2>/dev/null | grep -c . || true)"
+    else
+      wn="?"
+    fi
+    mbstat="MB:ok"
+    if [ -d "$w/.work/skills/memory-bank" ]; then
+      for f in $core; do [ -f "$w/.work/skills/memory-bank/$f.md" ] || { mbstat="MB:不完全"; break; }; done
+    else
+      mbstat="MB:なし"
+    fi
+    roll="${roll}"$'\n'"  - ${wname}: 未コミット ${wn} 件 / ${mbstat}"
+  done
+  if [ -n "$roll" ]; then
+    append_log "SessionStart proj=$proj WORKERS rollup"
+    msg="${msg}"$'\n\n'"ワーカー状況（supervisor 起動時 roll-up。worker 作業は worker を cwd にした別セッションで）:""${roll}"
+  fi
+fi
+
 # jq に依存せず、JSON 文字列として最低限のエスケープ（\ と " と改行）を行う。
 esc=${msg//\\/\\\\}
 esc=${esc//\"/\\\"}

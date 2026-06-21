@@ -43,6 +43,21 @@ symlink（エイリアス）/ 実ディレクトリ のいずれでもよい。s
 - ワーカーを `<workers_dir>/<name>` 経由（cwd が `…/<workers_dir>/<name>`）で起動すると、その worker は構造から
   「自分は配下」と気づける（[[memory-bank]] の上りエスカレ）。実パスで直接起動した worker は親を知らない＝standalone。
 
+### セッション境界（1 repo = 1 セッション）
+
+**worker 作業は worker を cwd にした別セッションで起動する**。supervisor セッションの中でプロセスを保ったまま
+worker に「コンテキストスイッチ」して worker の実装を進めるのは避ける。理由は構造的:
+
+- 起動時文脈注入（SessionStart フック＝Memory Bank の読み込み促し・未コミット WIP 表面化）は
+  **プロセス単位の起動イベント**で、起動時の cwd（`CLAUDE_PROJECT_DIR`）にしか効かない。1 プロセス内で
+  cd しても**再発火しない**＝切替先 worker の Memory Bank/WIP は自動表面化されない。
+- repo ごとに Memory Bank も `agent` ブランチも独立。1 プロセスで混ぜると「どの repo の文脈/ブランチか」が曖昧化する。
+
+supervisor セッションの役割は**俯瞰と配信**（interrupt 投函で dispatch）であって worker の実装ではない。
+代わりに **supervisor 起動時に配下 worker の状態（未コミット WIP / Memory Bank 充足）を roll-up 表示**する
+（SessionStart フックが `workers_dir` 配下を走査）＝どの worker を進めるべきか一目で判断できる。
+即時に worker を動かしたいときは、worker dir を指定してサブエージェントを起動する（同期・上記「配信」5 参照）。
+
 ## コアワークフロー
 
 ```

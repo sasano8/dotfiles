@@ -7,6 +7,8 @@
 - SessionStart フック（`bin/memory-bank-sessionstart` + `bin/install-claude-hooks.py` での注入）。
   - **funnel すり抜けの自動バックストップ**を内蔵: A=未コミット WIP の表面化（`git status` dirty を通知）／
     B=宙吊り前方参照 lint（`bin/lint-doc-refs`、skills/ 持ち repo のみ）。記憶非依存で取りこぼしを毎起動検知。
+  - C=supervisor 起動時の worker roll-up（`workers_dir` 配下の各 worker の WIP/MB 充足を一覧）。SessionStart は
+    プロセス単位なので worker 作業は worker-rooted 別セッションで起動する（1 repo = 1 セッション）。
 - supervisor 宣言（`workers_dir: workers`、配下 `manystore` を symlink で配置）。
 - 議事録ツール `bin/new-meeting` と docs-summary（`.cache/docs/`）。
 

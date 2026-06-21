@@ -8,6 +8,13 @@
   GC・dedup／非破壊原則／1 コミットで終える）。やりかけの description/L23 もそのまま活かして 1 コミットに。
 
 ## 直近の変更
+- 2026-06-21: **セッション境界を「1 repo = 1 セッション」に確定＋supervisor 起動時 worker roll-up を追加**
+  （ユーザー指摘: SessionStart はプロセス単位で、supervisor 起動→プロセス内で worker に切替えると worker には
+  再発火せず効かない）。SessionStart フックは絶対パスのグローバル登録なので worker-rooted セッションには効く
+  （この経路が正）。プロセス内コンテキストスイッチは原理的に非対応＝worker 作業は worker を cwd にした別セッション
+  で起動する運用に確定。代替として **C: supervisor 起動時に `workers_dir` 配下を走査し各 worker の WIP/MB 充足を
+  roll-up 表示**（フックに追加・実測: dotfiles 起動で `manystore: 未コミット N 件 / MB:ok`）。supervisor スキルに
+  「セッション境界」節を明記。
 - 2026-06-21: **funnel すり抜けの自動バックストップを 2 つ追加**（「もっと抜けないように」のユーザー要望）。
   funnel は記憶依存で忘れれば素通りする（今回の `memory clean` 取りこぼしが実例）→ SessionStart フック
   （`bin/memory-bank-sessionstart`）に **A: 未コミット WIP の表面化**（`git status` dirty を毎起動で通知）と
