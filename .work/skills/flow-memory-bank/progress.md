@@ -2,8 +2,10 @@
 
 ## 動くもの（What works）
 - `install.sh` による冪等・非破壊な symlink 展開（スキル共有、settings.json、editorconfig）。
-- スキル群: `docs-summary` / `memory-bank` / `quality` / `supervisor`。
-  - memory-bank に **`memory clean`（畳み込み/GC）節**を実装済み（肥大時の昇格・畳み込み・GC・dedup の保守ワークフロー）。
+- スキル群（4 レベル taxonomy・prefix 改名済み）: `func-docs-summary` / `flow-memory-bank` / `unit-quality` /
+  `role-supervisor_or_worker`。クロス参照は層エイリアス（`[[flow]]`/`[[role]]`）でリネーム耐性。
+  - flow-memory-bank に **`memory clean`（畳み込み/GC）節**＋**開発内ループ**を実装済み。**上りエスカレは pull 型 outbox**。
+  - role は **権限が非対称（下り許可・上り禁止）**。quality は **flow→unit の自己点検 1 本**（両建てなし）。
 - SessionStart フック（`bin/memory-bank-sessionstart` + `bin/install-claude-hooks.py` での注入）。
   - **funnel すり抜けの自動バックストップ**を内蔵: A=未コミット WIP の表面化（`git status` dirty を通知）／
     B=宙吊り前方参照 lint（`bin/lint-doc-refs`、skills/ 持ち repo のみ）。記憶非依存で取りこぼしを毎起動検知。
@@ -17,35 +19,25 @@
 - M002: supervisor として `workers/manystore` の状態確認と必要なら指示配信。
 - M003: 検証コマンドの整備（shell/Python の最低限のチェック手順の明文化 or スクリプト化）。
   - 一部着手: `bin/lint-doc-refs`（宙吊り前方参照 lint）を追加。今後ここに他チェックも集約していく。
-- M004: スキルを **role / flow / unit / func の 4 レベル**に再編（詳細は systemPatterns）。
+- M004: スキルを **role / flow / unit / func の 4 レベル**に再編（**Stage1・Stage2 完了**。詳細は systemPatterns）。
   - **Stage1 完了**: 4 スキルを prefix 改名（`role-supervisor_or_worker` / `flow-memory-bank` / `unit-quality` /
     `func-docs-summary`）。クロス参照を層エイリアスへ抽象化（`[[flow]]`/`[[role]]`＝singleton、葉はフル名）。
     データ slot を `flow-memory-bank` へ移し旧名は互換 symlink（全 worker 移行後に削除）。hook 両名検出・settings 両 glob・
-    install.sh に dangling prune。**要: 各マシンで `install.sh` 再実行＋新セッションで新スキル名が有効化**。
-  - **Stage2（未・次セッションで着手）**: 以下の内容再配置。
-  - 移動: flow（memory-bank）の「上りエスカレ（向き・境界ポリシー）」を role 層へ。interrupt 機構は flow に残す。
-  - **役割の権限は非対称（ユーザー確定 2026-06-22）**: supervisor→worker（下り）は**許可**＝横断展開・dispatch・
-    worker の escalation box への「受領」追記もOK。worker→supervisor（上り）は**禁止＝越権**（guard が deny）。
-    即時フィードバック（worker→agent エスカレ）は開発速度のため許可。完全疎結合は非現実的（box の受領編集等は起きる）
-    が、pull 型なら worker は supervisor 領域に書かないので上りブロックと両立。**guard のコードは既にこの通り＝変更不要**。
-    role SKILL / guard docstring の文言を「下り許可・上り禁止」の非対称で整える（私の言った“worker 不可侵”は言い過ぎ）。
-  - **quality は両建てにしない（ユーザー疑問を受け簡素化）**: `unit-quality` は常に **flow→unit** の自己点検 1 本。
-    supervisor の横断 drift 関心は **role→unit 直参照にせず、worker へ「自分の quality を点検せよ」と下り dispatch**
-    （実点検は worker の flow→unit で走る）。これで role→flow→unit が一貫し「両建て」例外が消える。
-  - **開発サイクル（flow の内ループ）を明文化**: 「開発 → 自己点検（flow→unit-quality）→ コミットとして切りのいい
-    自己完結した単位に達するまで繰り返す → commit（1機能/1修正=1コミット）→ 記録/次の単位へ」。
-    ループは **flow が worker 側で自走**。supervisor 配下なら「開発＋自己点検せよ」の**下り dispatch が起点**になり得るが、
-    supervisor は起点を投げるだけで各反復を driver しない（疎結合）。role には dispatch、flow にループ本体を置く。
-  - 依存は上→下のみ。下位から上位/個別実装をハード参照しない（[[skill-no-hard-refs-to-project-impl]]）。
-  - 命名プレフィックス導入は影響範囲あり（install.sh は自動検出済みなので追従、CLAUDE.md 参照名の更新が要る）。
-  - **worker は既定動作。per-worker の CLAUDE.md 契約は作らない**（中央＝role 既定＋グローバル hook＋guard で賄う）。
-    supervisor SKILL の「worker 宣言」節は削除済み。明示で強めたいならフックに role 判定 1 行（1 箇所で全 worker）。
-  - **上りエスカレは pull 型**（worker は親を知らなくてよい）: worker は自分の **エスカレ保留 outbox**（flow=memory-bank の
-    所定場所）に積むだけ。supervisor が `workers_dir` を走査して回収（既存の起動時 roll-up を拡張）。親パスで起動した
-    worker は構造から親を検出できる（補助経路）。flow に「タスク/エスカレの積み方」として明記する。
+    install.sh に dangling prune。
+  - **Stage2 完了（2026-06-22）**: 内容再配置をファイル単位 5 コミットで実施。
+    - flow: 開発内ループ（開発→自己点検→反復→commit→記録→次）を明文化。上りエスカレを **pull 型 outbox `outbox/`** へ
+      （worker は親を知らず自分の outbox に積む。supervisor が回収）。向き/境界ポリシーは role 参照に。
+    - unit-quality: **両建て廃止**＝常に flow→unit の自己点検 1 本。R10/注意を再フレーム。
+    - role: 新節「役割の権限（非対称: 下り許可・上り禁止）」。エスカレ受信を worker outbox の pull 回収に。
+      quality を下り dispatch（横断監査しない）に。配信 dispatch は flow 内ループの起点だが driver しない旨を明記。
+    - guard: docstring/deny メッセージを「上り禁止・下り許可」「outbox に積んで pull 回収」へ（判定ロジックは不変）。
+    - sessionstart: **role 判定 1 行**を中央注入（supervisor/worker/standalone を構造判定。3 ケース実挙動検証済み）。
+  - 残: **要 各マシンで `install.sh` 再実行**（dotfiles では Stage1 で活性化済み・他マシンは未）。旧名互換 symlink は
+    全 worker 移行後に削除。命名プレフィックス導入で CLAUDE.md 参照名の更新が要る箇所があれば追従。
 
 ## 現状ステータス
-- 2026-06-21: Memory Bank 初期化完了。WIP 2 件のコミットがこのサイクルの主作業。
+- 2026-06-22: **M004 Stage2 完了**（内容再配置をファイル単位 5 コミットで実施）。作業ツリーは Memory Bank 更新分のみ。
+- 2026-06-21: Memory Bank 初期化完了。
 
 ## 既知の問題
 - このリポジトリには専用テストスイートが無く、検証は構文チェック・ドライラン・目視 diff が中心。
@@ -56,3 +48,7 @@
 - Memory Bank の「無い／不完全」時の挙動を、通知のみ→**ブロッキング（承諾後に作り切る）**へ強化（WIP）。
 - `memory clean` は当初 description/起動時チェックに参照だけ入れて節が無い「壊れた前方参照」状態だった →
   **本体の節を書いて解消**（要望はまず記録してから実装＝ worker 側の record-request-before-work の親側適用）。
+- 役割の権限を **非対称（下り許可・上り禁止）** に確定（当初の「worker 不可侵＝互いに触れない」は言い過ぎ）。
+  上りは pull 型 outbox で worker が親を知らずに済ませ、guard は上りだけを止める。
+- quality を **両建て廃止＝flow→unit の自己点検 1 本**に確定（supervisor は横断監査せず下り dispatch のみ）。
+  これで role→flow→unit の依存が一貫した。

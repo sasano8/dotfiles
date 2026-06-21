@@ -11,11 +11,12 @@
   データ slot は flow-memory-bank へ移行＋旧名互換 symlink、hook 両名検出、settings 両 glob、install.sh に dangling prune。
 - **Stage1 活性化済み**: `install.sh` 実行で旧リンク 8 本 prune・新名 4 本リンク（`~/.claude/skills` & `~/.agents/skills`）。
   新スキル名（role-supervisor_or_worker 等）が有効。
-- **次セッションで M004 Stage2**（内容再配置）。確定済みの方針:
-  - 役割権限は非対称: supervisor→worker（下り）許可／worker→supervisor（上り）禁止＝越権（guard が deny・**コード変更不要**）。
-    即時フィードバック許可、box の受領編集は起きる（完全疎結合は非現実的）。role SKILL/guard 文言を非対称で整える。
-  - quality は両建てにしない: 常に flow→unit の自己点検 1 本。supervisor の横断は worker へ「自己点検せよ」と下り dispatch。
-  - 他: flow の上りエスカレ・境界ポリシーを role へ移動／エスカレ pull 型 outbox を flow に規定／フックへ role 判定 1 行。
+- **M004 Stage2 完了（このサイクル・2026-06-22）**: 内容再配置をファイル単位 5 コミットで実施。
+  - flow: 開発内ループ明文化＋上りエスカレを pull 型 outbox（`outbox/`）へ。向き/境界ポリシーは role 参照に。
+  - unit-quality: 両建て廃止＝flow→unit の自己点検 1 本（R10/注意を再フレーム）。
+  - role: 非対称権限（下り許可・上り禁止）節を新設／エスカレ受信を worker outbox の pull 回収へ／quality を下り dispatch に。
+  - guard: docstring/deny 文言を「上り禁止・下り許可」「outbox pull」へ（判定ロジック不変）。
+  - sessionstart: role 判定 1 行を中央注入（supervisor/worker/standalone を構造判定。3 ケース検証済み）。
 
 ## 旧フォーカス（完了）
 - **`memory clean` の実装を完成（2026-06-21、worker=manystore 経由のユーザー依頼）。** 前セッションで
@@ -43,9 +44,11 @@
 - リポジトリ調査（README / git log / skills / .gitignore / 未コミット diff）を実施し、各コアへ反映。
 
 ## 次のステップ
-1. WIP（SKILL.md / sessionstart）と Memory Bank 初期化を「切りのいい区切り」として `agent` ブランチへコミット。
-2. supervisor として配下 `workers/manystore` の状態（`.work/skills/memory-bank/`）を確認するか、
-   ユーザーの次の指示を受けて作業対象を選定する。
+1. **他マシンで `install.sh` 再実行**（Stage1 の新スキル名・Stage2 のフック更新を反映）。旧名互換 symlink は
+   全 worker 移行後に削除。
+2. supervisor として配下 `workers/manystore` を pull 回収（outbox）＋状態確認し、必要なら下り dispatch。
+   または manystore を **flow が pull 型 outbox に対応しているか**（旧 push 型の名残が無いか）軽く確認。
+3. ユーザーの次の指示を受けて作業対象を選定する。
 
 ## 進行中の決定・考慮事項
 - コミット方針は config 未配置のため既定 `agent-branch`（現在ブランチが既に `agent` なのでそのまま積む）。

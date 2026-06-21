@@ -35,7 +35,7 @@ dotfiles/
 - supervisor フロー: `workers_dir` 列挙 → 各ワーカーの `.work/skills/memory-bank/`（activeContext/progress）を読む
   → interrupt へ指示配信 → エスカレ取り込み。
 
-## アーキテクチャ: スキルを role / flow / unit / func の 4 レベルに分ける（Stage1 実装済み / Stage2 未）
+## アーキテクチャ: スキルを role / flow / unit / func の 4 レベルに分ける（Stage1・Stage2 実装済み）
 
 スキルを役割・手順・観点・機能の 4 レベルに整理し、名前にプレフィックスを付ける（M004）。
 依存は常に上→下のみ（下位は上位を参照し返さない＝[[skill-no-hard-refs-to-project-impl]] と一致）。
@@ -52,20 +52,26 @@ func-*  … 単機能ユーティリティ（葉。例: docs-summary）
   `[[unit-*]]`/`[[func-*]]` は葉のフル名）＝具体名は frontmatter のみ residし以後のリネームに波及しない。
   データ slot は `.work/skills/flow-memory-bank/`（旧名は互換 symlink、全 worker 移行後に削除）。
   hook は両名検出、settings は両 glob、install.sh は dangling 旧リンクを prune。
-- **Stage2（未）**: 下記の内容再配置（ポリシー移動・quality 両建て・エスカレ outbox・フックへ role 判定 1 行）。
+- **Stage2（実装済み）**: 下記の内容再配置を完了（ポリシー移動・quality 両建て廃止・エスカレ pull outbox・
+  開発内ループ明文化・フックへ role 判定 1 行）。コミット `2c…`〜（agent ブランチ、ファイル単位 5 コミット）。
 
 - **role-supervisor_or_worker**（現 `supervisor` を改名・統合）: 既定 worker、`workers_dir` 宣言で supervisor へ昇格。
-  - 行動指針＝「自分の repo 外（親/配下）の中身は直接編集しない」。**唯一の例外＝ interrupt 経由のやり取りだけ許可**。
-    - supervisor は全体俯瞰の知識を持つ → 全体を加味した**下り** interrupt を配下へ。
-    - worker は自分の要望を**上り** interrupt（worker からの要望）として supervisor へ。
-  - 境界の機械強制は `bin/worker-boundary-guard`（dotfiles 実装＝個別層。スキルは原則だけ持つ）。
-  - 現 memory-bank にある「上りエスカレ（向き・境界のポリシー）」はここへ移す。
+  - **権限は非対称（下り許可・上り禁止）**: supervisor→worker（下り）は許可＝dispatch・worker の interrupt 投函・
+    worker の outbox 回収/受領印。worker→supervisor（上り）は禁止＝越権（親の正本/受信箱に直接書かない）。
+    「worker 不可侵（互いに触れない）」ではなく、触れてよいのは下りだけ。
+  - 境界の機械強制は `bin/worker-boundary-guard`（dotfiles 実装＝個別層。**止めるのは上りだけ**。スキルは原則のみ）。
+  - 「上りエスカレの向き・境界ポリシー」は flow から**ここ role へ移動**（機構＝積み方は flow に残す）。
+  - **quality は下り dispatch で**: 配下を横断監査せず、drift が気になれば worker へ「自己点検せよ」と下ろすだけ
+    （実点検は worker の flow→unit。role→unit 直参照・横断スイープは持たない＝両建て廃止）。
+  - 配信 dispatch は worker の flow 開発内ループの**起点**だが、supervisor は各反復を driver しない（疎結合）。
 - **flow-memory-bank**（現 `memory-bank`）: 6 コア＋サイクル。**interrupt の機構（受信箱・取り込み・書式）を規定**＝
   役割間通信が起きる“場所”。役割に非依存（role を参照し返さない）。複数 unit を参照。
-  - **上りエスカレは pull 型**: worker は親を知らなくてよい。自分の **エスカレ保留 outbox**（flow の所定場所）に積むだけで、
+  - **開発内ループを明文化**: 開発→自己点検（flow→unit-quality）→コミット単位に達するまで反復→commit→記録→次。
+    ループ本体は worker 側 flow が自走（起点 dispatch は role）。
+  - **上りエスカレは pull 型**: worker は親を知らなくてよい。自分の **outbox `outbox/`**（flow の所定場所）に積むだけで、
     supervisor が `workers_dir` を走査して回収する（起動時 roll-up の拡張）。flow が「タスク/エスカレの積み方」を規定。
   - **worker は既定動作**: per-worker の CLAUDE.md 契約は作らない（正本の複製になる）。worker 既定は role 既定（`workers_dir`
-    不在）＋グローバル hook（flow を促す）＋guard（境界）の中央で賄う。明示はフック側に role 判定 1 行を足す。
+    不在）＋グローバル hook（flow を促す＋role 判定 1 行）＋guard（境界）の中央で賄う。
 - **unit-quality**（現 `quality`）ほか: 単一観点。
-  - quality は 2 つの顔: ①自分の品質を自分のサイクルで点検＝flow から参照する unit／
-    ②supervisor が配下の quality drift を横断監視＝role 側に残す。両建て。
+  - quality は**常に flow→unit の自己点検 1 本（両建てにしない）**: 各 repo が自分の flow 開発内ループから参照して走らせる。
+    supervisor は横断監査せず worker へ下り dispatch するだけ＝role→flow→unit が一貫する。
