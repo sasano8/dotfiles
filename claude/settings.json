@@ -4,6 +4,9 @@
   "tui": "fullscreen",
   "permissions": {
     "allow": [
+      "Read(.work/skills/flow-memory-bank/**)",
+      "Edit(.work/skills/flow-memory-bank/**)",
+      "Write(.work/skills/flow-memory-bank/**)",
       "Read(.work/skills/memory-bank/**)",
       "Edit(.work/skills/memory-bank/**)",
       "Write(.work/skills/memory-bank/**)"

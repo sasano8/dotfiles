@@ -17,10 +17,10 @@ symlink される主なもの:
 - `claude/settings.json` → `~/.claude/settings.json`
 - `editorconfig` → `~/.editorconfig`（Makefile のタブだけ規定。他はフォーマッタに委ねる）
 
-## Memory Bank — `skills/memory-bank`
+## Memory Bank — `skills/flow-memory-bank`
 
 セッションを跨いでプロジェクトを継続するための永続ドキュメント（Cline 準拠）。
-使い方・構成は [skills/memory-bank/SKILL.md](skills/memory-bank/SKILL.md)。
+使い方・構成は [skills/flow-memory-bank/SKILL.md](skills/flow-memory-bank/SKILL.md)。
 
 セッション開始時に「Memory Bank があれば読む」よう自動案内する **SessionStart フック**:
 
@@ -33,11 +33,11 @@ symlink される主なもの:
   bin/install-claude-hooks.py --apply    # 書き込み（.bak 作成・冪等）
   ```
 
-## ドキュメント解析 — `skills/docs-summary`
+## ドキュメント解析 — `skills/func-docs-summary`
 
 `.cache/docs/` に置いたドキュメント（議事録など）を解析し、トピック別・決定事項・未完了 ToDo・
 時系列に**再整理した要約**を `.cache/docs/summary/SUMMARY.md` に生成する。
-使い方は [skills/docs-summary/SKILL.md](skills/docs-summary/SKILL.md)。
+使い方は [skills/func-docs-summary/SKILL.md](skills/func-docs-summary/SKILL.md)。
 
 議事録の新規作成:
 

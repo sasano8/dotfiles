@@ -1,5 +1,5 @@
 ---
-name: docs-summary
+name: func-docs-summary
 description: .cache/docs/ 配下に放り込んだドキュメント（議事録など）を解析し、横断的に再整理した要約を .cache/docs/summary/ に生成して表示する。トピック別の要点・決定事項・未完了の ToDo（チェックボックス）・時系列を抽出してまとめる。ユーザーが「docs を要約」「議事録をまとめて」「summary を更新」「ドキュメントを再整理」等を求めたときに使う。既定の対象は個人ナレッジベース ~/projects/dotfiles/.cache/docs。
 ---
 

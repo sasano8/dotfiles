@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Claude Code PreToolUse フック: worker セッションによる「親の正本」破壊を機械的に止める。
 
-役割モデル（[[supervisor]]）は「worker は親（supervisor=dotfiles）の正本を直接編集しない。
+役割モデル（[[role]]）は「worker は親（supervisor=dotfiles）の正本を直接編集しない。
 用があれば上りエスカレ（interrupt）する」と定める。だがこれは口約束（記憶依存）なので、
 worker セッションから ~/.claude/skills/<name>/... 経由で symlink 越しに dotfiles の
 スキル正本を書き換える、という越境が現に起きた。本フックはそれを毎回・決定論的に deny する。

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Claude Code SessionStart フック。
-# プロジェクトに Memory Bank（.work/skills/memory-bank/ など）があれば、
-# 「タスク開始前に memory-bank スキルの手順で読む」よう文脈注入する。
+# プロジェクトに Memory Bank（.work/skills/flow-memory-bank/。旧名 memory-bank も互換検出）があれば、
+# 「タスク開始前に flow スキル（記憶/作業フロー。旧 memory-bank）の手順で読む」よう文脈注入する。
 # 発火は必ずログに残す（動作確認用）。無ければ何もしない（no-op）。
 #
 # stdin: SessionStart の JSON（読み飛ばしてよい）。
@@ -25,7 +25,8 @@ append_log() {
 }
 
 mb=""
-for d in "$proj/.work/skills/memory-bank" "$proj/memory-bank"; do
+# flow-memory-bank が正規名。memory-bank は移行互換（未移行 worker / 旧 symlink）。両方を見る。
+for d in "$proj/.work/skills/flow-memory-bank" "$proj/.work/skills/memory-bank" "$proj/memory-bank"; do
   [ -d "$d" ] && { mb="$d"; break; }
 done
 
@@ -47,10 +48,10 @@ done
 
 if [ -n "$missing" ]; then
   append_log "SessionStart proj=$proj mb=$mb INCOMPLETE missing=$missing"
-  msg="警告: このプロジェクトの Memory Bank（${mb}）はコアファイルが欠けており、Memory Bank として機能しません（不足: ${missing}）。memory-bank スキルの手順で「initialize memory bank」を実行し、6 コア（projectbrief / productContext / activeContext / systemPatterns / techContext / progress）を揃えてから着手してください。中身を伴わない空ディレクトリだけが残っている場合はそれ自体が異常です。"
+  msg="警告: このプロジェクトの Memory Bank（${mb}）はコアファイルが欠けており、Memory Bank として機能しません（不足: ${missing}）。flow スキル（記憶/作業フロー。旧 memory-bank）の手順で「initialize memory bank」を実行し、6 コア（projectbrief / productContext / activeContext / systemPatterns / techContext / progress）を揃えてから着手してください。中身を伴わない空ディレクトリだけが残っている場合はそれ自体が異常です。"
 else
   append_log "SessionStart proj=$proj mb=$mb"
-  msg="このプロジェクトには Memory Bank があります（${mb}）。タスク開始前に memory-bank スキルの手順に従い、コアファイル（projectbrief / productContext / activeContext / systemPatterns / techContext / progress）を読んでから着手してください。"
+  msg="このプロジェクトには Memory Bank があります（${mb}）。タスク開始前に flow スキル（記憶/作業フロー。旧 memory-bank）の手順に従い、コアファイル（projectbrief / productContext / activeContext / systemPatterns / techContext / progress）を読んでから着手してください。"
 fi
 
 # A: 前セッションから持ち越した未コミット WIP を表面化する（非ブロッキング）。
@@ -99,8 +100,12 @@ if [ -n "$workers_dir" ] && [ -d "$proj/$workers_dir" ]; then
       wn="?"
     fi
     mbstat="MB:ok"
-    if [ -d "$w/.work/skills/memory-bank" ]; then
-      for f in $core; do [ -f "$w/.work/skills/memory-bank/$f.md" ] || { mbstat="MB:不完全"; break; }; done
+    wmb=""
+    for d in "$w/.work/skills/flow-memory-bank" "$w/.work/skills/memory-bank"; do
+      [ -d "$d" ] && { wmb="$d"; break; }
+    done
+    if [ -n "$wmb" ]; then
+      for f in $core; do [ -f "$wmb/$f.md" ] || { mbstat="MB:不完全"; break; }; done
     else
       mbstat="MB:なし"
     fi

@@ -5,8 +5,12 @@
   結果、symlink 越しに親（dotfiles）の正本が書き換わり親に WIP が残った事象を起点に、(1) `bin/worker-boundary-guard`
   （PreToolUse・worker からの親正本書き込みを deny、4 ケース検証済み）を実装し settings.json に配線、(2) supervisor
   SKILL を**プロジェクト非依存**に直す（`bin/...`/`dotfiles` 直書きを排除＝[[skill-no-hard-refs-to-project-impl]]）。
-  さらにスキルを **role/flow/unit の 3 レベル**に再編する設計に合意（実装は backlog M004）。
-- **未確定**: guard＋settings＋supervisor SKILL の差分はコミット保留中（taxonomy 再編に吸収するか単独確定するか判断待ち）。
+  さらにスキルを **role/flow/unit/func の 4 レベル**に再編する設計に合意。guard は確定済み（`605b8da`/`ffc2fff`）。
+- **M004 Stage1 完了（このサイクル）**: 4 スキルを prefix 改名（role-supervisor_or_worker / flow-memory-bank /
+  unit-quality / func-docs-summary）、クロス参照を層エイリアス（`[[flow]]`/`[[role]]`）へ抽象化＝リネーム耐性。
+  データ slot は flow-memory-bank へ移行＋旧名互換 symlink、hook 両名検出、settings 両 glob、install.sh に dangling prune。
+- **次**: M004 Stage2（内容再配置: ポリシー flow→role、quality 両建て、エスカレ outbox、フックへ role 判定 1 行）。
+  各マシンで `install.sh` 再実行＋新セッションで新スキル名が有効化される点に注意。
 
 ## 旧フォーカス（完了）
 - **`memory clean` の実装を完成（2026-06-21、worker=manystore 経由のユーザー依頼）。** 前セッションで

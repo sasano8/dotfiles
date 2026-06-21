@@ -3,13 +3,13 @@
 ## システム構成
 ```
 dotfiles/
-├── CLAUDE.md            # プロジェクト指示（memory-bank/supervisor を使う宣言・workers_dir 宣言）
+├── CLAUDE.md            # プロジェクト指示（flow/role を使う宣言・taxonomy 参照規約・workers_dir 宣言）
 ├── README.md            # 入口（詳細は各 SKILL.md）
-├── install.sh           # 冪等・非破壊な symlink 展開
-├── claude/settings.json # ~/.claude/settings.json の正本（SessionStart フック同梱）
+├── install.sh           # 冪等・非破壊な symlink 展開（旧 dangling リンクの prune も）
+├── claude/settings.json # ~/.claude/settings.json の正本（SessionStart/PreToolUse フック同梱）
 ├── editorconfig         # ~/.editorconfig（Makefile のタブだけ規定）
-├── bin/                 # 補助スクリプト（hooks 注入 / sessionstart / new-meeting）
-├── skills/              # docs-summary / memory-bank / quality / supervisor
+├── bin/                 # 補助スクリプト（sessionstart / worker-boundary-guard / lint-doc-refs / new-meeting）
+├── skills/              # role-supervisor_or_worker / flow-memory-bank / unit-quality / func-docs-summary
 └── workers/             # supervisor 配下ワーカー（別リポジトリ・gitignore 済み。現状 manystore）
 ```
 
@@ -35,16 +35,24 @@ dotfiles/
 - supervisor フロー: `workers_dir` 列挙 → 各ワーカーの `.work/skills/memory-bank/`（activeContext/progress）を読む
   → interrupt へ指示配信 → エスカレ取り込み。
 
-## 目標アーキテクチャ: スキルを role / flow / unit の 3 レベルに分ける（backlog・未実装）
+## アーキテクチャ: スキルを role / flow / unit / func の 4 レベルに分ける（Stage1 実装済み / Stage2 未）
 
-スキルを役割・手順・観点の 3 レベルに整理し、名前にプレフィックスを付ける（合意済み・実装は M004 で）。
+スキルを役割・手順・観点・機能の 4 レベルに整理し、名前にプレフィックスを付ける（M004）。
 依存は常に上→下のみ（下位は上位を参照し返さない＝[[skill-no-hard-refs-to-project-impl]] と一致）。
 
 ```
 role-*  … 各ロール間のやり取り方法（向き・境界）＋「1 つの共通 flow」への参照を持つ
 flow-*  … 作業の進め方/記憶。エージェント間通信（interrupt 機構）を規定。複数 unit への参照を持つ
 unit-*  … 単一観点の点検指標（葉）
+func-*  … 単機能ユーティリティ（葉。例: docs-summary）
 ```
+
+- **Stage1（実装済み）**: 4 スキルを prefix 改名（`role-supervisor_or_worker` / `flow-memory-bank` /
+  `unit-quality` / `func-docs-summary`）。クロス参照を層エイリアスへ抽象化（`[[flow]]`/`[[role]]` は singleton、
+  `[[unit-*]]`/`[[func-*]]` は葉のフル名）＝具体名は frontmatter のみ residし以後のリネームに波及しない。
+  データ slot は `.work/skills/flow-memory-bank/`（旧名は互換 symlink、全 worker 移行後に削除）。
+  hook は両名検出、settings は両 glob、install.sh は dangling 旧リンクを prune。
+- **Stage2（未）**: 下記の内容再配置（ポリシー移動・quality 両建て・エスカレ outbox・フックへ role 判定 1 行）。
 
 - **role-supervisor_or_worker**（現 `supervisor` を改名・統合）: 既定 worker、`workers_dir` 宣言で supervisor へ昇格。
   - 行動指針＝「自分の repo 外（親/配下）の中身は直接編集しない」。**唯一の例外＝ interrupt 経由のやり取りだけ許可**。
