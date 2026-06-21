@@ -1,0 +1,93 @@
+#!/usr/bin/env python3
+"""Claude Code PreToolUse フック: worker セッションによる「親の正本」破壊を機械的に止める。
+
+役割モデル（[[supervisor]]）は「worker は親（supervisor=dotfiles）の正本を直接編集しない。
+用があれば上りエスカレ（interrupt）する」と定める。だがこれは口約束（記憶依存）なので、
+worker セッションから ~/.claude/skills/<name>/... 経由で symlink 越しに dotfiles の
+スキル正本を書き換える、という越境が現に起きた。本フックはそれを毎回・決定論的に deny する。
+
+判定（書き込み系ツールのみ。Read は対象外＝worker は正本を読んでよい）:
+  - 対象ファイルの実体パス（symlink 解決後）が DOTFILES_ROOT 配下、かつ
+  - 起動セッションの cwd（CLAUDE_PROJECT_DIR）が DOTFILES_ROOT 自身でない
+  → deny（dotfiles 自身のセッションでの自己編集は許可。別 repo からの越境だけを止める）。
+
+DOTFILES_ROOT は本スクリプトの実体位置（bin/ の親）から自己解決する＝配布先非依存。
+stdin: PreToolUse の JSON（tool_name / tool_input / cwd 等）。出力は deny 時のみ。
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import sys
+from pathlib import Path
+
+
+def realpath(p: str | os.PathLike) -> Path:
+    # 新規 Write でファイルが未存在でも、親方向の symlink は解決したい。
+    return Path(os.path.realpath(str(p)))
+
+
+def main() -> int:
+    try:
+        payload = json.load(sys.stdin)
+    except (json.JSONDecodeError, ValueError):
+        return 0  # 解釈できなければ素通し（フックは安全側＝既存挙動を壊さない）。
+
+    tool = payload.get("tool_name", "")
+    # 書き込み系のみ対象。それ以外（Read/Grep/Bash 等）は素通し。
+    if tool not in {"Edit", "Write", "MultiEdit", "NotebookEdit"}:
+        return 0
+
+    tool_input = payload.get("tool_input") or {}
+    target = tool_input.get("file_path") or tool_input.get("notebook_path")
+    if not target:
+        return 0
+
+    dotfiles_root = realpath(Path(__file__).resolve().parent.parent)
+
+    # cwd は CLAUDE_PROJECT_DIR を最優先（起動時の root）。無ければ payload.cwd → $PWD。
+    proj = os.environ.get("CLAUDE_PROJECT_DIR") or payload.get("cwd") or os.getcwd()
+    proj_root = realpath(proj)
+
+    # 相対パスは cwd 基準で解決してから実体化する。
+    tpath = Path(target)
+    if not tpath.is_absolute():
+        tpath = proj_root / tpath
+    target_real = realpath(tpath)
+
+    def under(child: Path, parent: Path) -> bool:
+        return child == parent or parent in child.parents
+
+    # 越境判定: 対象が dotfiles 配下 かつ セッションが dotfiles 自身でない。
+    if under(target_real, dotfiles_root) and proj_root != dotfiles_root:
+        rel = target_real
+        try:
+            rel = target_real.relative_to(dotfiles_root)
+        except ValueError:
+            pass
+        reason = (
+            f"このセッション（{proj_root}）は worker / 別リポジトリです。"
+            f" 編集対象 {target} は symlink 解決すると supervisor=dotfiles の正本"
+            f"（{dotfiles_root}/{rel}）を指しており、worker からの直接編集は禁止です。"
+            " 役割モデル: worker は親の正本を書き換えない。"
+            " スキルや親設定を変えたい場合は (1) その要望を worker の"
+            " interrupt/ へ書いて supervisor に上りエスカレするか、"
+            " (2) dotfiles を cwd にした別セッションで編集してください"
+            "（1 repo = 1 セッション）。"
+        )
+        out = {
+            "hookSpecificOutput": {
+                "hookEventName": "PreToolUse",
+                "permissionDecision": "deny",
+                "permissionDecisionReason": reason,
+            }
+        }
+        print(json.dumps(out, ensure_ascii=False))
+        return 0
+
+    return 0  # 越境でなければ何も出さず素通し（allow 既定）。
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

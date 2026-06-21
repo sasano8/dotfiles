@@ -43,6 +43,41 @@ symlink（エイリアス）/ 実ディレクトリ のいずれでもよい。s
 - ワーカーを `<workers_dir>/<name>` 経由（cwd が `…/<workers_dir>/<name>`）で起動すると、その worker は構造から
   「自分は配下」と気づける（[[memory-bank]] の上りエスカレ）。実パスで直接起動した worker は親を知らない＝standalone。
 
+### worker 宣言（worker 側 CLAUDE.md ＝既定で worker・workflow は memory-bank）
+
+worker は**別リポジトリ**なので、契約は **worker 自身の CLAUDE.md** に置く。`workers_dir` を**宣言しない**ことが
+そのまま「supervisor スキルは no-op ＝既定で worker」を意味する（昇格は `workers_dir` 宣言という構造条件だけ）。
+新しい worker を採り入れたら、その repo の CLAUDE.md に最低限これを置く（雛形）:
+
+````markdown
+# CLAUDE.md — <worker 名>
+
+このプロジェクトは **worker**。memory-bank スキルを使う（タスク開始時に 6 コアを読み interrupt/ を取り込む）。
+
+## 役割 / 境界
+- `workers_dir` は宣言しない（＝supervisor スキルは no-op＝自動的に worker）。
+- **親（supervisor）の正本は直接編集しない。** スキル本体・親設定・共有フックを変えたいときは、
+  自分で書き換えず (1) 要望を `.work/skills/memory-bank/interrupt/` に投函し supervisor へ上りエスカレ（`role: worker`）、
+  または (2) supervisor repo を cwd にした別セッションで編集する（1 repo = 1 セッション）。
+````
+
+> worker の CLAUDE.md を置くのは「配下の採用（下り）」なので supervisor の正当な作業。ただし worker repo を
+> 直接いじるより、**worker の interrupt/ に「この内容で CLAUDE.md を作れ」と投函**して worker 側に作らせる方が
+> 1 repo = 1 セッションに沿う。
+
+### 境界の強制（記憶でなく構造で）
+
+上の「親の正本を直接編集しない」は口約束では守られない（記憶依存ですり抜ける。実例: worker セッションが
+共有スキルの symlink 越しに親のスキル正本を書き換え、親に WIP が残った）。これは **supervisor repo 側の編集ガード**
+（起動セッション単位で効く PreToolUse 等のフック）で毎回・決定論的に止めるのが正しい。満たすべき要件:
+
+- 編集系ツールの対象を **symlink 解決**し、実体が **supervisor repo 配下**かつ起動セッションの cwd が
+  **supervisor repo 自身でない**なら **deny**（worker からの越境のみ。supervisor 自身の自己編集と
+  worker 内の自分のファイル編集・親正本の Read は素通し）。
+- deny は「interrupt で上りエスカレ／supervisor repo の別セッションで編集」へ誘導する＝役割モデルと地続き。
+- **具体の実装（スクリプト名・配線）は supervisor repo 側の関心事**としてその repo に置く。スキルは原則だけ持つ
+  （汎用スキルから特定プロジェクトの実装をハード参照しない）。
+
 ### セッション境界（1 repo = 1 セッション）
 
 **worker 作業は worker を cwd にした別セッションで起動する**。supervisor セッションの中でプロセスを保ったまま

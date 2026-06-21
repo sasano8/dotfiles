@@ -10,6 +10,19 @@
     ]
   },
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/projects/dotfiles/bin/worker-boundary-guard",
+            "timeout": 10,
+            "statusMessage": "編集境界を確認中..."
+          }
+        ]
+      }
+    ],
     "SessionStart": [
       {
         "hooks": [
