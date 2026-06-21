@@ -3,6 +3,7 @@
 ## 動くもの（What works）
 - `install.sh` による冪等・非破壊な symlink 展開（スキル共有、settings.json、editorconfig）。
 - スキル群: `docs-summary` / `memory-bank` / `quality` / `supervisor`。
+  - memory-bank に **`memory clean`（畳み込み/GC）節**を実装済み（肥大時の昇格・畳み込み・GC・dedup の保守ワークフロー）。
 - SessionStart フック（`bin/memory-bank-sessionstart` + `bin/install-claude-hooks.py` での注入）。
 - supervisor 宣言（`workers_dir: workers`、配下 `manystore` を symlink で配置）。
 - 議事録ツール `bin/new-meeting` と docs-summary（`.cache/docs/`）。
@@ -22,3 +23,5 @@
 - コミットのブランチ方針を config 駆動化 → `agent` 専用ブランチでの単線運用に確定（main 統合は人間）。
 - supervisor 宣言を CLAUDE.md（`workers_dir`）へ移し、スキルから literal を排除。
 - Memory Bank の「無い／不完全」時の挙動を、通知のみ→**ブロッキング（承諾後に作り切る）**へ強化（WIP）。
+- `memory clean` は当初 description/起動時チェックに参照だけ入れて節が無い「壊れた前方参照」状態だった →
+  **本体の節を書いて解消**（要望はまず記録してから実装＝ worker 側の record-request-before-work の親側適用）。

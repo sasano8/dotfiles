@@ -1,13 +1,14 @@
 # Active Context
 
 ## 現在のフォーカス
-- Memory Bank を初期化したばかり（このサイクルで `.work/skills/memory-bank/` を新規作成）。
-- 直前から **未コミットの WIP** が 2 件ある（このリポジトリの作業者本人の編集）:
-  - `skills/memory-bank/SKILL.md` — 「無い／不完全」時を**ブロッキング化**（通知だけで進まない／承諾後に作り切る）。
-  - `bin/memory-bank-sessionstart` — dir があっても 6 コアが欠けていれば警告し initialize を促す充足チェックを追加。
-  → これらは Memory Bank の自己改善で一貫しているので、この初期化と合わせてコミット候補。
+- **`memory clean` の実装を完成（2026-06-21、worker=manystore 経由のユーザー依頼）。** 前セッションで
+  `memory clean` の配線（description キーワード＋起動時チェック L23 の前方参照「下記『メモリークリーン』」）
+  だけ入れて**本体の節を書かずに中断・未コミット**だった。この壊れた前方参照を解消すべく、SKILL.md に
+  **「メモリークリーン（memory clean ＝ 畳み込み / GC）」節**を追記（トリガ／肥大の兆候／操作=昇格・畳み込み・
+  GC・dedup／非破壊原則／1 コミットで終える）。やりかけの description/L23 もそのまま活かして 1 コミットに。
 
 ## 直近の変更
+- 2026-06-21: `memory clean` 節を SKILL.md に実装し、半端だった前方参照を解消（上記フォーカス）。
 - 2026-06-21: Memory Bank 6 コア + interrupt/ 受信箱を新規作成（initialize memory bank）。
 - リポジトリ調査（README / git log / skills / .gitignore / 未コミット diff）を実施し、各コアへ反映。
 
