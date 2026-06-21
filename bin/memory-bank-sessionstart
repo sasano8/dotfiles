@@ -89,6 +89,31 @@ workers_dir=""
 if [ -f "$proj/CLAUDE.md" ]; then
   workers_dir="$(grep -oE 'workers_dir:[[:space:]]*[A-Za-z0-9._/-]+' "$proj/CLAUDE.md" 2>/dev/null | head -n1 | sed -E 's/.*workers_dir:[[:space:]]*//' || true)"
 fi
+# role 判定 1 行（1 箇所で全 worker/supervisor に明示。worker は既定動作なので per-worker の
+# CLAUDE.md 契約を作らず、ここで中央から役割を宣言する）。役割は構造で決まる:
+#  - 自分の CLAUDE.md に workers_dir 宣言 → supervisor。
+#  - 祖先に workers_dir 宣言があり、その配下に自分が含まれる（親パス経由で起動）→ worker。
+#  - どちらでもない（実パス直接起動など）→ standalone＝role 行は出さない（無関係な MB を汚さない）。
+role=""
+if [ -n "$workers_dir" ] && [ -d "$proj/$workers_dir" ]; then
+  role="supervisor"
+else
+  anc="$proj"
+  for _ in 1 2 3 4 5 6; do
+    anc="$(dirname "$anc")"
+    [ "$anc" = "/" ] || [ "$anc" = "." ] && break
+    [ -f "$anc/CLAUDE.md" ] || continue
+    wd="$(grep -oE 'workers_dir:[[:space:]]*[A-Za-z0-9._/-]+' "$anc/CLAUDE.md" 2>/dev/null | head -n1 | sed -E 's/.*workers_dir:[[:space:]]*//' || true)"
+    [ -n "$wd" ] || continue
+    case "$proj/" in "$anc/$wd/"*) role="worker"; break ;; esac
+  done
+fi
+if [ "$role" = "supervisor" ]; then
+  msg="${msg}"$'\n\n'"役割: supervisor（workers_dir=${workers_dir}）。配下を俯瞰し interrupt で下り dispatch、各 worker の outbox を pull 回収する（権限は非対称＝下り許可・上り禁止）。worker の中身は worker 側セッションで進める。"
+elif [ "$role" = "worker" ]; then
+  msg="${msg}"$'\n\n'"役割: worker（既定）。flow の開発内ループ（開発→自己点検→commit）で自走し、親の正本は直接編集しない（上り禁止）。親へ上げたい事は自分の outbox/ に積む（pull 型・supervisor が回収）。"
+fi
+
 if [ -n "$workers_dir" ] && [ -d "$proj/$workers_dir" ]; then
   roll=""
   for w in "$proj/$workers_dir"/*; do
