@@ -32,6 +32,10 @@
   - **quality は両建てにしない（ユーザー疑問を受け簡素化）**: `unit-quality` は常に **flow→unit** の自己点検 1 本。
     supervisor の横断 drift 関心は **role→unit 直参照にせず、worker へ「自分の quality を点検せよ」と下り dispatch**
     （実点検は worker の flow→unit で走る）。これで role→flow→unit が一貫し「両建て」例外が消える。
+  - **開発サイクル（flow の内ループ）を明文化**: 「開発 → 自己点検（flow→unit-quality）→ コミットとして切りのいい
+    自己完結した単位に達するまで繰り返す → commit（1機能/1修正=1コミット）→ 記録/次の単位へ」。
+    ループは **flow が worker 側で自走**。supervisor 配下なら「開発＋自己点検せよ」の**下り dispatch が起点**になり得るが、
+    supervisor は起点を投げるだけで各反復を driver しない（疎結合）。role には dispatch、flow にループ本体を置く。
   - 依存は上→下のみ。下位から上位/個別実装をハード参照しない（[[skill-no-hard-refs-to-project-impl]]）。
   - 命名プレフィックス導入は影響範囲あり（install.sh は自動検出済みなので追従、CLAUDE.md 参照名の更新が要る）。
   - **worker は既定動作。per-worker の CLAUDE.md 契約は作らない**（中央＝role 既定＋グローバル hook＋guard で賄う）。
