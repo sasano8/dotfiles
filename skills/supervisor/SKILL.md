@@ -43,27 +43,18 @@ symlink（エイリアス）/ 実ディレクトリ のいずれでもよい。s
 - ワーカーを `<workers_dir>/<name>` 経由（cwd が `…/<workers_dir>/<name>`）で起動すると、その worker は構造から
   「自分は配下」と気づける（[[memory-bank]] の上りエスカレ）。実パスで直接起動した worker は親を知らない＝standalone。
 
-### worker 宣言（worker 側 CLAUDE.md ＝既定で worker・workflow は memory-bank）
+### worker は既定動作（per-worker の宣言は不要）
 
-worker は**別リポジトリ**なので、契約は **worker 自身の CLAUDE.md** に置く。`workers_dir` を**宣言しない**ことが
-そのまま「supervisor スキルは no-op ＝既定で worker」を意味する（昇格は `workers_dir` 宣言という構造条件だけ）。
-新しい worker を採り入れたら、その repo の CLAUDE.md に最低限これを置く（雛形）:
+worker は**既定の振る舞い**で動く。`workers_dir` を**宣言しない**ことがそのまま「supervisor スキルは no-op ＝
+自動的に worker」を意味する（昇格は `workers_dir` 宣言という構造条件だけ）。したがって **各 worker に「自分は worker」と
+書く CLAUDE.md 契約は不要**——書けば正本の複製になる。worker の既定挙動は次の 3 つを**中央**が賄う:
 
-````markdown
-# CLAUDE.md — <worker 名>
+- **役割**: `workers_dir` の不在＝自動的に worker（宣言しないことが宣言）。
+- **flow**: 起動時の文脈注入が「[[memory-bank]] を読め（無ければ initialize）」を促す＝作業/記憶のワークフロー。
+- **境界**: 下記「境界の強制」のガードが越境を構造的に止める。
 
-このプロジェクトは **worker**。memory-bank スキルを使う（タスク開始時に 6 コアを読み interrupt/ を取り込む）。
-
-## 役割 / 境界
-- `workers_dir` は宣言しない（＝supervisor スキルは no-op＝自動的に worker）。
-- **親（supervisor）の正本は直接編集しない。** スキル本体・親設定・共有フックを変えたいときは、
-  自分で書き換えず (1) 要望を `.work/skills/memory-bank/interrupt/` に投函し supervisor へ上りエスカレ（`role: worker`）、
-  または (2) supervisor repo を cwd にした別セッションで編集する（1 repo = 1 セッション）。
-````
-
-> worker の CLAUDE.md を置くのは「配下の採用（下り）」なので supervisor の正当な作業。ただし worker repo を
-> 直接いじるより、**worker の interrupt/ に「この内容で CLAUDE.md を作れ」と投函**して worker 側に作らせる方が
-> 1 repo = 1 セッションに沿う。
+> per-worker に契約を配るのは正本の一元化に反する。worker 既定を明示で強めたいなら、各 worker の CLAUDE.md ではなく
+> **起動時の文脈注入（フック）側に role 判定の一行**を足す（1 箇所で全 worker に効く）。
 
 ### 境界の強制（記憶でなく構造で）
 

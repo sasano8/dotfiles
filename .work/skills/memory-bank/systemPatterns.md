@@ -54,6 +54,10 @@ unit-*  … 単一観点の点検指標（葉）
   - 現 memory-bank にある「上りエスカレ（向き・境界のポリシー）」はここへ移す。
 - **flow-memory-bank**（現 `memory-bank`）: 6 コア＋サイクル。**interrupt の機構（受信箱・取り込み・書式）を規定**＝
   役割間通信が起きる“場所”。役割に非依存（role を参照し返さない）。複数 unit を参照。
+  - **上りエスカレは pull 型**: worker は親を知らなくてよい。自分の **エスカレ保留 outbox**（flow の所定場所）に積むだけで、
+    supervisor が `workers_dir` を走査して回収する（起動時 roll-up の拡張）。flow が「タスク/エスカレの積み方」を規定。
+  - **worker は既定動作**: per-worker の CLAUDE.md 契約は作らない（正本の複製になる）。worker 既定は role 既定（`workers_dir`
+    不在）＋グローバル hook（flow を促す）＋guard（境界）の中央で賄う。明示はフック側に role 判定 1 行を足す。
 - **unit-quality**（現 `quality`）ほか: 単一観点。
   - quality は 2 つの顔: ①自分の品質を自分のサイクルで点検＝flow から参照する unit／
     ②supervisor が配下の quality drift を横断監視＝role 側に残す。両建て。

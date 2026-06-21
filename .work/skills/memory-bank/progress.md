@@ -24,6 +24,11 @@
   - quality は両建て（自己点検＝flow 参照 unit／配下 drift 横断＝role 側）。
   - 依存は上→下のみ。下位から上位/個別実装をハード参照しない（[[skill-no-hard-refs-to-project-impl]]）。
   - 命名プレフィックス導入は影響範囲あり（install.sh は自動検出済みなので追従、CLAUDE.md 参照名の更新が要る）。
+  - **worker は既定動作。per-worker の CLAUDE.md 契約は作らない**（中央＝role 既定＋グローバル hook＋guard で賄う）。
+    supervisor SKILL の「worker 宣言」節は削除済み。明示で強めたいならフックに role 判定 1 行（1 箇所で全 worker）。
+  - **上りエスカレは pull 型**（worker は親を知らなくてよい）: worker は自分の **エスカレ保留 outbox**（flow=memory-bank の
+    所定場所）に積むだけ。supervisor が `workers_dir` を走査して回収（既存の起動時 roll-up を拡張）。親パスで起動した
+    worker は構造から親を検出できる（補助経路）。flow に「タスク/エスカレの積み方」として明記する。
 
 ## 現状ステータス
 - 2026-06-21: Memory Bank 初期化完了。WIP 2 件のコミットがこのサイクルの主作業。
