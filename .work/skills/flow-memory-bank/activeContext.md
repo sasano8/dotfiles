@@ -37,6 +37,9 @@
   GC・dedup／非破壊原則／1 コミットで終える）。やりかけの description/L23 もそのまま活かして 1 コミットに。
 
 ## 直近の変更
+- 2026-06-22: **interrupt 取り込み → M008 backlog 化**。対話要望「`role` プレフィックスが直交2軸（調整位置＝
+  sup/worker ／ 機能領域＝app開発/インフラ）を混在」を funnel 経由で記録、私の分析（方向A=tags/OKF 推奨・方向B=
+  `domain-`/`discipline-` 新 prefix・段階導入）を折り込んで progress M008 へ。`archive/2026-06-22-role-prefix-two-axes.md` に退避。
 - 2026-06-22: **M005 OKF メタデータ義務化**。unit-quality に R12 新設（OKF 準拠 frontmatter・必須 `type`）、R11 の `kind`
   を `type` へ統一。4 スキルに `type` 付与、具体 taxonomy 値の正本を CLAUDE.md へ。deep think を実地運用（着手前計画→
   最終反証で「汎用スキルに固有値直書き」のハード参照ミスを捕捉し CLAUDE.md へ逃がす修正）。lint-doc-refs 緑・frontmatter YAML 妥当。

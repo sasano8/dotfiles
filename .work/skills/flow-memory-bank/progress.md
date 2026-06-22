@@ -49,6 +49,17 @@
 - M007: **Memory Bank コア 6 ファイルの OKF 化**（M005 から分離）。現状 frontmatter 皆無。`type`（例: `memory-core` や
   ファイル別種別）を付すか、index.md/log.md 概念を入れるか含め**未着手・要設計**。優先度 low（コア 6 は固定役割で flow が
   読む＝loader 非経由のため義務度は SKILL.md より低い）。
+- M008: **`role` プレフィックスの再考＝直交2軸の分離**（ユーザー指摘 2026-06-22・要設計・未決）。現 `role-` は
+  **軸1=調整/権限の位置**（supervisor↔worker・垂直・`workers_dir` で構造決定）と **軸2=機能/専門領域**（app開発・
+  インフラ運用・QA…・水平・主題）を混在させている。1 プロジェクトは「app開発×worker」のように両方を同時に持つ＝直交。
+  現 4 階層（role/flow/unit/func）は「抽象度＋依存方向」の単一軸で、軸2（主題）はその階層ではない点が肝。
+  - **方向A（エージェント推奨）**: 軸2を**階層でなく直交メタデータ（tags / OKF frontmatter）**で表す（M005 の OKF と
+    整合・新 prefix 不要・抽象度軸を綺麗に保つ）。
+  - **方向B**: 軸2を新上位 prefix に。`team-` は「集団」で機能でない＝`domain-`/`discipline-` が精確。`func-` と衝突する
+    "function" 系は避ける。派生案: supervisor/worker を `org-`/`coord-` へ改名し "role" を軸2へ明け渡す（改名コスト大）。
+  - **段階導入案**: まず方向A（tags）。合成可能なスキル実体が要ると判明した時点で衝突しない名で方向Bへ昇格。
+  - 未決: (a) A/B どちらを採るか（まず A で十分か）。(b) B なら軸名（domain/discipline/team）と sup/worker の改名要否。
+    (c) tags のキー設計（`tags:` 自由値か `domain:` 専用フィールドか）。
 - M006: **unit-quality に「deep think」フェーズを導入**（ユーザー要望 2026-06-22）**＝実装完了（2026-06-22）**。
   flow 内ループを 2 つの deep think ゲート（着手前=計画整理／コミット前=最終点検）で挟み、最終 NG なら計画へ戻す:
   ```
