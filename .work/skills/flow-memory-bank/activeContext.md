@@ -26,6 +26,15 @@
   GC・dedup／非破壊原則／1 コミットで終える）。やりかけの description/L23 もそのまま活かして 1 コミットに。
 
 ## 直近の変更
+- 2026-06-22: **品質参照の indirection 化（WIP・未コミット）**。flow SKILL.md 本体から `[[unit-quality]]` の直書きを
+  全除去し、品質 unit の指定を `reference/quality-policy.md` へ一元化。スキル同梱デフォルト
+  `skills/flow-memory-bank/reference/quality-policy.md`（既定 [[unit-quality]]）→ インスタンス
+  `.work/.../reference/quality-policy.md`（組織上書き）の解決順（commit config と同思想）。付け替えは参照 1 か所。
+  インスタンス側の旧参照名（`[[quality]]`/`[[memory-bank]]`/`[[supervisor]]`）も現行 taxonomy へ修正。
+- 2026-06-22: **interrupt 取り込み → M006 をバックログへ**。対話要望「unit-quality の deep think フェーズ」を
+  funnel 経由で記録し progress.md M006 へトリアージ、`interrupt/archive/2026-06-22-deep-think-phase.md` に退避。
+  設計合意: `計画整理(deep think・俯瞰) → (開発→自己点検・局所/速)×N → 最終点検(deep think) → 問題あれば計画整理へ戻る → commit`。
+  deep think=俯瞰ゲート（着手前/コミット前の 2 か所、NG なら巻き戻し）、per-iteration 自己点検=局所・速。算法は unit-quality に定義。
 - 2026-06-22: **manystore の slot 移行＋移行互換の全撤去**。supervisor 下りで manystore の
   `.work/skills/memory-bank/` → `flow-memory-bank/` を `git mv`（履歴保持）し UI config の featured パスも更新、
   manystore の agent ブランチへコミット。全 worker 移行完了につき dotfiles 側の移行互換（`.work/skills/memory-bank`
