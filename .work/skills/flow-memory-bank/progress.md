@@ -60,6 +60,11 @@
   - **段階導入案**: まず方向A（tags）。合成可能なスキル実体が要ると判明した時点で衝突しない名で方向Bへ昇格。
   - 未決: (a) A/B どちらを採るか（まず A で十分か）。(b) B なら軸名（domain/discipline/team）と sup/worker の改名要否。
     (c) tags のキー設計（`tags:` 自由値か `domain:` 専用フィールドか）。
+  - **俯瞰展開（2026-06-22）**: 開発体系（env: prod/stg/dev、team: app/infra）に倣い、分類を**直交ファセット**として
+    体系化するアイデアを `design/taxonomy-faceted.md` に抽出。要点: 軸を 3 種の carrier に振り分ける（**prefix**=抽象度の
+    骨格だけ／**metadata(OKF tags)**=主題・属性／**declaration/config**=構造・文脈で決まるもの＝sup/worker は workers_dir・
+    env は実行文脈）。抽出ファセット: level / coordination / team(domain) / env / lifecycle / maturity / scope。
+    段階導入は「まず tags で機能領域・成熟度（最小コスト）→ 必要なら env を declaration 化 → 合意後に prefix 改名」。
 - M006: **unit-quality に「deep think」フェーズを導入**（ユーザー要望 2026-06-22）**＝実装完了（2026-06-22）**。
   flow 内ループを 2 つの deep think ゲート（着手前=計画整理／コミット前=最終点検）で挟み、最終 NG なら計画へ戻す:
   ```

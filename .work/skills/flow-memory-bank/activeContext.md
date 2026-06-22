@@ -37,6 +37,9 @@
   GC・dedup／非破壊原則／1 コミットで終える）。やりかけの description/L23 もそのまま活かして 1 コミットに。
 
 ## 直近の変更
+- 2026-06-22: **M008 俯瞰展開＝直交ファセット体系アイデアを抽出**。開発体系（env/team/role）に倣い `design/taxonomy-faceted.md`
+  を新規作成。軸を 3 carrier（prefix=抽象度骨格／metadata=主題 tags／declaration=構造文脈）へ振り分ける体系と、抽出
+  ファセット（level/coordination/team/env/lifecycle/maturity/scope）・段階導入・命名衝突整理・未決の問いを記録。M008 から参照。
 - 2026-06-22: **interrupt 取り込み → M008 backlog 化**。対話要望「`role` プレフィックスが直交2軸（調整位置＝
   sup/worker ／ 機能領域＝app開発/インフラ）を混在」を funnel 経由で記録、私の分析（方向A=tags/OKF 推奨・方向B=
   `domain-`/`discipline-` 新 prefix・段階導入）を折り込んで progress M008 へ。`archive/2026-06-22-role-prefix-two-axes.md` に退避。
