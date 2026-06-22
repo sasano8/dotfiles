@@ -5,6 +5,8 @@
 - スキル群（4 レベル taxonomy・prefix 改名済み）: `func-docs-summary` / `flow-memory-bank` / `unit-quality` /
   `role-supervisor_or_worker`。クロス参照は層エイリアス（`[[flow]]`/`[[role]]`）でリネーム耐性。
   - flow-memory-bank に **`memory clean`（畳み込み/GC）節**＋**開発内ループ**を実装済み。**上りエスカレは pull 型 outbox**。
+    開発内ループは **deep think 2 ゲート（着手前/コミット前）で挟む**（算法は unit-quality・配置は flow＝M006）。
+  - unit-quality に **「deep think（俯瞰品質ゲートの算法）」節**（俯瞰観点＋反証ステップ）を実装済み。
   - role は **権限が非対称（下り許可・上り禁止）**。quality は **flow→unit の自己点検 1 本**（両建てなし）。
 - SessionStart フック（`bin/memory-bank-sessionstart` + `bin/install-claude-hooks.py` での注入）。
   - **funnel すり抜けの自動バックストップ**を内蔵: A=未コミット WIP の表面化（`git status` dirty を通知）／
@@ -41,26 +43,24 @@
   - 置き場所: unit-quality の **新 R12（推奨・構造チェック系）** か R11 拡張か。← ユーザー「一旦中断」で保留。
   - スコープ: まず SKILL.md 4 本だけか、Memory Bank コア 6 ファイル（現状 frontmatter 皆無）の OKF 化まで広げるか。
   - 推奨（再開時）: SKILL.md に `type: role|flow|unit|func` 必須を新 R12 で規定。MB コアの OKF 化は別タスクに分離。
-- M006: **unit-quality に「deep think」フェーズを導入**（ユーザー要望 2026-06-22）。作業範囲が品質ガイドラインに
-  沿っているかを**俯瞰的に深く考える**フェーズ。flow 内ループを 2 つの deep think ゲートで挟み、最終で問題が
-  あれば計画へ戻すループにする:
+- M006: **unit-quality に「deep think」フェーズを導入**（ユーザー要望 2026-06-22）**＝実装完了（2026-06-22）**。
+  flow 内ループを 2 つの deep think ゲート（着手前=計画整理／コミット前=最終点検）で挟み、最終 NG なら計画へ戻す:
   ```
-  計画整理（deep think・俯瞰）→ （開発 → 自己点検・局所/スピード重視）×N → 最終点検（deep think・俯瞰）
-    → 品質に問題あり: 計画整理（deep think）へ戻る ／ 問題なし: commit
+  計画整理（deep think・俯瞰）→ （開発 → 自己点検・局所/速）×N → 最終点検（deep think・俯瞰）
+    → NG: 計画整理へ戻る（1 往復まで。なお NG は WIP コミット退避）／ OK: commit
   ```
-  - **二層の点検の役割分担**:
-    - **deep think（俯瞰）** = 作業スコープ全体が品質ガイドラインに沿うかを深く考えるゲート。①着手前の計画整理、
-      ②コミット前の最終点検 の 2 か所。最終で NG なら**計画整理へ巻き戻す**（commit へ進まない）。
-    - **per-iteration 自己点検（局所）** = 各開発ステップ内の局所チェック。**スピード重視**（deep think しても
-      よいが軽く）。既存の flow 内ループの「開発→自己点検」をそのまま担う。
-  - **置き場所**: deep think の**考え方アルゴリズム自体は [[unit-quality]] が正本**として定める（品質正本に同居）。
-    flow は内ループにこの構造を組み込み「deep think せよ／自己点検せよ」と呼ぶだけ（flow→品質参照の indirection を踏襲）。
-  - 論点（**未決**）: (a) deep think アルゴリズムの具体（俯瞰観点の列挙か・自問テンプレか・反証ステップ有無か）。
-    (b) standalone/worker で重さが過剰にならないよう発火条件（大物のみ等）を設けるか＝局所点検との軽重の線引き。
-    (c) 「最終点検 NG → 計画整理へ戻る」の無限ループ防止（戻り回数の上限 or WIP コミットでの退避）。
+  - **二層の点検**: deep think（俯瞰・コミット単位の 2 ゲート）と per-iteration 自己点検（局所/速）の役割分担。
+  - **関心の分離（実装の肝）**: deep think の**算法（俯瞰観点＋反証ステップ）は [[unit-quality]] が正本**（新節
+    「deep think（俯瞰品質ゲートの算法）」）。**配置・タイミング・戻し回数・WIP 退避＝フローは [[flow]]** が持つ
+    （単体スキルにフローを混ぜない原則を遵守）。flow は内ループに構造を組み込み「deep think せよ」と呼ぶだけ。
+  - **確定した 3 論点**（2026-06-22 ユーザー承認）: (a) 算法の形＝**俯瞰観点＋反証ステップ**（固定テンプレにせず
+    観点と姿勢だけ規定）。(b) 発火＝**コミット単位・範囲比例**（軽微は着手前ゲートを省き最終に畳む。局所点検は速のまま）。
+    (c) ループ防止＝**上限 1 往復→WIP 退避**（なお NG なら緑にできない WIP として commit し activeContext に明記）。
 
 ## 現状ステータス
-- 2026-06-22: **M004 Stage2 完了**（内容再配置をファイル単位 5 コミットで実施）。作業ツリーは Memory Bank 更新分のみ。
+- 2026-06-22: **M006 完了**（deep think 2 ゲートを flow 内ループへ／算法を unit-quality に新設）。M001 は作業ツリー
+  clean で実質完了、M002 は manystore clean・outbox なし・既投函 dispatch 未取り込み（待ちは想定どおり）。
+- 2026-06-22: **M004 Stage2 完了**（内容再配置をファイル単位 5 コミットで実施）。
 - 2026-06-21: Memory Bank 初期化完了。
 
 ## 既知の問題
@@ -76,3 +76,5 @@
   上りは pull 型 outbox で worker が親を知らずに済ませ、guard は上りだけを止める。
 - quality を **両建て廃止＝flow→unit の自己点検 1 本**に確定（supervisor は横断監査せず下り dispatch のみ）。
   これで role→flow→unit の依存が一貫した。
+- **deep think（俯瞰品質ゲート）を導入**（M006）。算法（俯瞰観点＋反証）は unit-quality・配置/戻し回数/WIP 退避は
+  flow に分離（単体スキルにフロー混ぜない原則）。発火はコミット単位・範囲比例、ループ防止は上限 1 往復→WIP 退避。

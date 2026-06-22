@@ -1,6 +1,13 @@
 # Active Context
 
-## 現在のフォーカス（2026-06-22）
+## 現在のフォーカス（2026-06-22・最新）
+- **M006「deep think（俯瞰品質ゲート）」実装完了**。flow 内ループを 2 ゲート（着手前=計画整理／コミット前=最終点検）
+  で挟み、算法（俯瞰観点＋反証ステップ）は [[unit-quality]] に新節として正本化、配置/タイミング/戻し回数/WIP 退避は
+  [[flow]] に分離（単体スキルにフローを混ぜない原則を遵守）。3 論点はユーザー承認済み（俯瞰観点＋反証／コミット単位・
+  範囲比例／上限 1 往復→WIP 退避）。supervisor roll-up: manystore は clean・outbox なし・既投函 dispatch 未取り込み（待ちは想定どおり）。
+- 次サイクル候補: M005（OKF メタデータ義務化・推奨案あり）、M003（検証コマンド整備）。
+
+## 旧フォーカス（2026-06-22・M004 系）
 - **worker 越境の機械強制（guard）＋スキル taxonomy の合意**。manystore（worker）セッションでスキル更新を命じた
   結果、symlink 越しに親（dotfiles）の正本が書き換わり親に WIP が残った事象を起点に、(1) `bin/worker-boundary-guard`
   （PreToolUse・worker からの親正本書き込みを deny、4 ケース検証済み）を実装し settings.json に配線、(2) supervisor
@@ -26,7 +33,11 @@
   GC・dedup／非破壊原則／1 コミットで終える）。やりかけの description/L23 もそのまま活かして 1 コミットに。
 
 ## 直近の変更
-- 2026-06-22: **品質参照の indirection 化（WIP・未コミット）**。flow SKILL.md 本体から `[[unit-quality]]` の直書きを
+- 2026-06-22: **M006 deep think 実装**。flow SKILL「開発内ループ」を 2 ゲート構造へ改修（着手前/コミット前の俯瞰
+  ゲート＋per-iteration 自己点検の二層／範囲比例の発火／上限 1 往復→WIP 退避）。unit-quality に「deep think（俯瞰
+  品質ゲートの算法）」節を新設（俯瞰観点＋反証ステップ。配置・タイミングは flow の領分と明記＝関心の分離を維持）。
+  自己点検は deep think（俯瞰＋反証）で実施＝関心の分離違反なし・R11 ハード参照混入なし・lint-doc-refs 緑。
+- 2026-06-22: **品質参照の indirection 化（`4b0d3ed` でコミット済み）**。flow SKILL.md 本体から `[[unit-quality]]` の直書きを
   全除去し、品質 unit の指定を `reference/quality-policy.md` へ一元化。スキル同梱デフォルト
   `skills/flow-memory-bank/reference/quality-policy.md`（既定 [[unit-quality]]）→ インスタンス
   `.work/.../reference/quality-policy.md`（組織上書き）の解決順（commit config と同思想）。付け替えは参照 1 か所。
