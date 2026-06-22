@@ -1,5 +1,6 @@
 ---
 name: flow-memory-bank
+type: flow
 description: Cline の Memory Bank パターンに準拠した永続ドキュメント群を読み書きし、セッションを跨いでプロジェクトを継続する。作業フォルダ `.work/skills/flow-memory-bank/` 配下の 6 コアファイル（projectbrief / productContext / activeContext / systemPatterns / techContext / progress）を、毎タスク開始時に必ず全て読む。初回利用（ファイルが無い）は「initialize memory bank」として雛形を初期化する。`interrupt.md`（ユーザーが非対話で自由に放り込む受信箱）を毎タスク開始時に取り込み、タスク・バックログへ振り分ける。ユーザーが「memory bank」「initialize memory bank」「update memory bank」「memory clean」「作業を進める」「次のサイクル」「割り込み」「interrupt」等を求めたときに使う。肥大したら `memory clean`（畳み込み/GC）をたまに提言する。プロジェクト非依存。
 ---
 

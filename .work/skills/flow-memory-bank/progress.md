@@ -7,6 +7,8 @@
   - flow-memory-bank に **`memory clean`（畳み込み/GC）節**＋**開発内ループ**を実装済み。**上りエスカレは pull 型 outbox**。
     開発内ループは **deep think 2 ゲート（着手前/コミット前）で挟む**（算法は unit-quality・配置は flow＝M006）。
   - unit-quality に **「deep think（俯瞰品質ゲートの算法）」節**（俯瞰観点＋反証ステップ）を実装済み。
+  - unit-quality に **R12（OKF ドキュメントメタデータ）**。4 スキル SKILL.md に必須 `type`（role/flow/unit/func）付与済み
+    （値の正本は CLAUDE.md＝M005）。
   - role は **権限が非対称（下り許可・上り禁止）**。quality は **flow→unit の自己点検 1 本**（両建てなし）。
 - SessionStart フック（`bin/memory-bank-sessionstart` + `bin/install-claude-hooks.py` での注入）。
   - **funnel すり抜けの自動バックストップ**を内蔵: A=未コミット WIP の表面化（`git status` dirty を通知）／
@@ -35,14 +37,18 @@
     - guard: docstring/deny メッセージを「上り禁止・下り許可」「outbox に積んで pull 回収」へ（判定ロジックは不変）。
     - sessionstart: **role 判定 1 行**を中央注入（supervisor/worker/standalone を構造判定。3 ケース実挙動検証済み）。
   - 残: なし。manystore 移行完了・移行互換撤去済み（他マシン無し）。命名プレフィックス由来の参照更新も追従済み。
-- M005: **スキルドキュメントに OKF（Open Knowledge Format）メタデータを義務化**（ユーザー要望 2026-06-22）。
-  OKF= Google Cloud の markdown+YAML 知識フォーマット（詳細はメモリ `okf-open-knowledge-format`）。必須 frontmatter は
-  `type` のみ／推奨 `title`/`description`/`resource`/`tags`/`timestamp`。本リポ適用の論点（**未決**）:
-  - フィールド: `type` に**種別（role/flow/unit/func）**を入れる案（R11 の「種別は frontmatter で宣言」を実体化）。
-    `name`/`description` は loader 既定で維持。`timestamp`/`tags` は任意とするか。
-  - 置き場所: unit-quality の **新 R12（推奨・構造チェック系）** か R11 拡張か。← ユーザー「一旦中断」で保留。
-  - スコープ: まず SKILL.md 4 本だけか、Memory Bank コア 6 ファイル（現状 frontmatter 皆無）の OKF 化まで広げるか。
-  - 推奨（再開時）: SKILL.md に `type: role|flow|unit|func` 必須を新 R12 で規定。MB コアの OKF 化は別タスクに分離。
+- M005: **スキルドキュメントに OKF メタデータを義務化＝実装完了（2026-06-22）**。確定:
+  - **新 R12（unit-quality）**: SKILL.md は OKF 準拠 frontmatter を持つ。**必須 `type`**（値はプロジェクトの taxonomy が
+    定める＝OKF は producer 裁量。汎用スキルは literal を持たず「taxonomy が定める値」とだけ言う）。`name`/`description` は
+    loader 必須として維持、`tags`/`timestamp` 任意。R11 の `kind` 例示を `type`（R12）へ統一＝drift 解消。
+  - **具体の taxonomy 値（role/flow/unit/func）は CLAUDE.md が正本**（汎用スキルへの固有値ハード参照を回避＝R11 自己遵守。
+    最終 deep think で反証ヒット→修正した点）。SKILL.md 4 本に `type:` を付与（role/flow/unit/func）。
+  - スコープは SKILL.md 4 本に限定。MB コア 6 ファイルの OKF 化は M007 へ分離（YAGNI）。
+  - 残リスク: skill loader が未知キー `type` を拒否しないこと（OKF/Agent Skills は拡張許容が原則＝低リスク。reload 後の
+    スキル一覧表示で要確認）。
+- M007: **Memory Bank コア 6 ファイルの OKF 化**（M005 から分離）。現状 frontmatter 皆無。`type`（例: `memory-core` や
+  ファイル別種別）を付すか、index.md/log.md 概念を入れるか含め**未着手・要設計**。優先度 low（コア 6 は固定役割で flow が
+  読む＝loader 非経由のため義務度は SKILL.md より低い）。
 - M006: **unit-quality に「deep think」フェーズを導入**（ユーザー要望 2026-06-22）**＝実装完了（2026-06-22）**。
   flow 内ループを 2 つの deep think ゲート（着手前=計画整理／コミット前=最終点検）で挟み、最終 NG なら計画へ戻す:
   ```
@@ -58,6 +64,8 @@
     (c) ループ防止＝**上限 1 往復→WIP 退避**（なお NG なら緑にできない WIP として commit し activeContext に明記）。
 
 ## 現状ステータス
+- 2026-06-22: **M005 完了**（OKF メタデータ義務化＝R12 新設・4 スキルに `type` 付与・値正本を CLAUDE.md へ）。MB コア
+  OKF 化は M007 へ繰り越し。
 - 2026-06-22: **M006 完了**（deep think 2 ゲートを flow 内ループへ／算法を unit-quality に新設）。M001 は作業ツリー
   clean で実質完了、M002 は manystore clean・outbox なし・既投函 dispatch 未取り込み（待ちは想定どおり）。
 - 2026-06-22: **M004 Stage2 完了**（内容再配置をファイル単位 5 コミットで実施）。
@@ -78,3 +86,5 @@
   これで role→flow→unit の依存が一貫した。
 - **deep think（俯瞰品質ゲート）を導入**（M006）。算法（俯瞰観点＋反証）は unit-quality・配置/戻し回数/WIP 退避は
   flow に分離（単体スキルにフロー混ぜない原則）。発火はコミット単位・範囲比例、ループ防止は上限 1 往復→WIP 退避。
+- **OKF メタデータを義務化**（M005）。R12 で SKILL.md に必須 `type`。**値の正本は宣言側（CLAUDE.md）**・汎用スキル
+  （unit-quality）は literal を持たず「taxonomy が定める値」と言うだけ＝R11 自己遵守（deep think 反証で発見・修正）。

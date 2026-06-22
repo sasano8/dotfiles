@@ -1,11 +1,15 @@
 # Active Context
 
 ## 現在のフォーカス（2026-06-22・最新）
-- **M006「deep think（俯瞰品質ゲート）」実装完了**。flow 内ループを 2 ゲート（着手前=計画整理／コミット前=最終点検）
-  で挟み、算法（俯瞰観点＋反証ステップ）は [[unit-quality]] に新節として正本化、配置/タイミング/戻し回数/WIP 退避は
-  [[flow]] に分離（単体スキルにフローを混ぜない原則を遵守）。3 論点はユーザー承認済み（俯瞰観点＋反証／コミット単位・
-  範囲比例／上限 1 往復→WIP 退避）。supervisor roll-up: manystore は clean・outbox なし・既投函 dispatch 未取り込み（待ちは想定どおり）。
-- 次サイクル候補: M005（OKF メタデータ義務化・推奨案あり）、M003（検証コマンド整備）。
+- **M005「OKF メタデータ義務化」実装完了**。unit-quality に R12（OKF 準拠 frontmatter・必須 `type`）を新設、4 スキルの
+  SKILL.md に `type`（role/flow/unit/func）を付与。**具体の taxonomy 値は CLAUDE.md が正本**（汎用スキルへの固有値
+  ハード参照を回避＝R11 自己遵守。これは着手前 deep think で計画し、最終 deep think の反証でハード参照ミスを捕捉→修正した）。
+  R11 の `kind` 例示を `type`（R12）へ統一し drift 解消。MB コア 6 ファイルの OKF 化は M007 へ分離（YAGNI）。
+  残リスク: skill loader が未知キー `type` を拒否しないこと（低リスク。reload 後のスキル一覧で要確認）。
+- **M006「deep think（俯瞰品質ゲート）」実装完了**（前サイクル）。flow 内ループを 2 ゲートで挟み、算法は [[unit-quality]]・
+  配置/戻し回数/WIP 退避は [[flow]] に分離。今サイクルの M005 はこの deep think を実地で回した（着手前計画＋最終反証）。
+- supervisor roll-up: manystore は clean・outbox なし・既投函 dispatch 未取り込み（待ちは想定どおり）。
+- 次サイクル候補: M007（MB コア OKF 化・low）、M003（検証コマンド整備）。
 
 ## 旧フォーカス（2026-06-22・M004 系）
 - **worker 越境の機械強制（guard）＋スキル taxonomy の合意**。manystore（worker）セッションでスキル更新を命じた
@@ -33,6 +37,9 @@
   GC・dedup／非破壊原則／1 コミットで終える）。やりかけの description/L23 もそのまま活かして 1 コミットに。
 
 ## 直近の変更
+- 2026-06-22: **M005 OKF メタデータ義務化**。unit-quality に R12 新設（OKF 準拠 frontmatter・必須 `type`）、R11 の `kind`
+  を `type` へ統一。4 スキルに `type` 付与、具体 taxonomy 値の正本を CLAUDE.md へ。deep think を実地運用（着手前計画→
+  最終反証で「汎用スキルに固有値直書き」のハード参照ミスを捕捉し CLAUDE.md へ逃がす修正）。lint-doc-refs 緑・frontmatter YAML 妥当。
 - 2026-06-22: **M006 deep think 実装**。flow SKILL「開発内ループ」を 2 ゲート構造へ改修（着手前/コミット前の俯瞰
   ゲート＋per-iteration 自己点検の二層／範囲比例の発火／上限 1 往復→WIP 退避）。unit-quality に「deep think（俯瞰
   品質ゲートの算法）」節を新設（俯瞰観点＋反証ステップ。配置・タイミングは flow の領分と明記＝関心の分離を維持）。

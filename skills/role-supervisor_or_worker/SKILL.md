@@ -1,5 +1,6 @@
 ---
 name: role-supervisor_or_worker
+type: role
 description: 複数のワーカープロジェクトを束ねて俯瞰計画し、各ワーカーの interrupt 受信箱へ指示を配信し、ワーカーからのエスカレーションを取り込む。supervisor として動くのは CLAUDE.md に `workers_dir` を宣言したプロジェクトのみ（無ければ何もしない＝暴発しない）。優先度は要求側の要望を踏まえつつ supervisor が確定する。ユーザーが「supervisor」「workers をまとめる」「配下に指示」「俯瞰計画」「エスカレーションを捌く」等を求めたときに使う。プロジェクト非依存。
 ---
 

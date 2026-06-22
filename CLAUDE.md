@@ -6,6 +6,8 @@
 
 スキルは **role / flow / unit / func** の 4 レベルで、名前にプレフィックスを付ける
 （`role-supervisor_or_worker` / `flow-memory-bank` / `unit-quality` / `func-docs-summary`）。
+**この 4 値が本リポの taxonomy ＝ SKILL.md frontmatter の必須キー `type` の取りうる値**（OKF 準拠・unit-quality R12。
+汎用スキルは literal を持たず「taxonomy が定める値」とだけ言う＝具体値はここが正本）。
 ドキュメント内のクロス参照は**具体名でなく層を指す**＝リネーム耐性を持たせる:
 
 - `[[role]]` / `[[flow]]` … singleton（各 1 個）。`role-*` / `flow-*` プレフィックスの唯一のスキルへ解決。
