@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Claude Code SessionStart フック。
-# プロジェクトに Memory Bank（.work/skills/memory-bank/ など）があれば、
-# 「タスク開始前に memory-bank スキルの手順で読む」よう文脈注入する。
+# プロジェクトに Memory Bank（.work/skills/flow-memory-bank/。旧名 memory-bank も互換検出）があれば、
+# 「タスク開始前に flow スキル（記憶/作業フロー。旧 memory-bank）の手順で読む」よう文脈注入する。
 # 発火は必ずログに残す（動作確認用）。無ければ何もしない（no-op）。
 #
 # stdin: SessionStart の JSON（読み飛ばしてよい）。
@@ -9,6 +9,9 @@
 set -euo pipefail
 
 cat >/dev/null 2>&1 || true   # stdin を消費（壊れても無視）
+
+# このスクリプトと同階層の補助ツール（lint-doc-refs 等）を解決する。
+script_dir="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
 
 proj="${CLAUDE_PROJECT_DIR:-$PWD}"
 log="${MB_HOOK_LOG:-$HOME/.claude/memory-bank-hook.log}"
@@ -22,7 +25,9 @@ append_log() {
 }
 
 mb=""
-for d in "$proj/.work/skills/memory-bank" "$proj/memory-bank"; do
+# flow-memory-bank が正規名（全 worker 移行済み＝旧 slot 名 .work/skills/memory-bank の互換検出は撤去）。
+# $proj/memory-bank はさらに古いルート直下レイアウトの検出（flow が移行を提案する経路）として残す。
+for d in "$proj/.work/skills/flow-memory-bank" "$proj/memory-bank"; do
   [ -d "$d" ] && { mb="$d"; break; }
 done
 
@@ -44,14 +49,100 @@ done
 
 if [ -n "$missing" ]; then
   append_log "SessionStart proj=$proj mb=$mb INCOMPLETE missing=$missing"
-  msg="警告: このプロジェクトの Memory Bank（${mb}）はコアファイルが欠けており、Memory Bank として機能しません（不足: ${missing}）。memory-bank スキルの手順で「initialize memory bank」を実行し、6 コア（projectbrief / productContext / activeContext / systemPatterns / techContext / progress）を揃えてから着手してください。中身を伴わない空ディレクトリだけが残っている場合はそれ自体が異常です。"
+  msg="警告: このプロジェクトの Memory Bank（${mb}）はコアファイルが欠けており、Memory Bank として機能しません（不足: ${missing}）。flow スキル（記憶/作業フロー。旧 memory-bank）の手順で「initialize memory bank」を実行し、6 コア（projectbrief / productContext / activeContext / systemPatterns / techContext / progress）を揃えてから着手してください。中身を伴わない空ディレクトリだけが残っている場合はそれ自体が異常です。"
 else
   append_log "SessionStart proj=$proj mb=$mb"
-  msg="このプロジェクトには Memory Bank があります（${mb}）。タスク開始前に memory-bank スキルの手順に従い、コアファイル（projectbrief / productContext / activeContext / systemPatterns / techContext / progress）を読んでから着手してください。"
+  msg="このプロジェクトには Memory Bank があります（${mb}）。タスク開始前に flow スキル（記憶/作業フロー。旧 memory-bank）の手順に従い、コアファイル（projectbrief / productContext / activeContext / systemPatterns / techContext / progress）を読んでから着手してください。"
 fi
 
-# jq に依存せず、JSON 文字列として最低限のエスケープ（\ と "）を行う。
-# パスに改行等は通常含まれない前提。
+# A: 前セッションから持ち越した未コミット WIP を表面化する（非ブロッキング）。
+# funnel（interrupt 受信箱）をすり抜けて「始めたまま落ちた」中途半端な編集・未記録の
+# 要望は、未コミット変更として残る。種類を問わず毎セッション開始時に必ず可視化し、
+# 「思い出したら気づく」ではなく「毎回機械的に気づく」状態にする（記憶に依存しない検知）。
+if git -C "$proj" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  dirty="$(git -C "$proj" status --porcelain 2>/dev/null || true)"
+  if [ -n "$dirty" ]; then
+    n=$(printf '%s\n' "$dirty" | grep -c . || true)
+    listed=$(printf '%s\n' "$dirty" | head -n 10)
+    append_log "SessionStart proj=$proj WIP=$n"
+    msg="${msg}"$'\n\n'"注意: 前セッションからの未コミット変更が ${n} 件あります（funnel をすり抜けた中途半端な作業／未記録の要望の可能性）。着手前に内容を確認し、完了させてコミットするか、要望なら interrupt へ記録してください:"$'\n'"${listed}"
+  fi
+fi
+
+# B: スキル文書の宙吊り前方参照を lint（skills/ を持つ repo＝dotfiles 等でのみ実行）。
+# 「下記『X』」が指す節が書かれていない、というクラスのバグを決定論的に捕まえる。
+# skills/ が無い repo ではゼロコスト。失敗しても本来の通知は止めない（best-effort）。
+if [ -d "$proj/skills" ] && command -v python3 >/dev/null 2>&1 && [ -x "$script_dir/lint-doc-refs" ]; then
+  refout="$(python3 "$script_dir/lint-doc-refs" "$proj"/skills/*/SKILL.md 2>/dev/null || true)"
+  if [ -n "$refout" ]; then
+    append_log "SessionStart proj=$proj DANGLING_REFS"
+    msg="${msg}"$'\n\n'"注意: スキル文書に宙吊りの前方参照があります（予告した節が未実装の可能性）:"$'\n'"${refout}"
+  fi
+fi
+
+# C: supervisor 起動時のワーカー roll-up。
+# SessionStart はプロセス単位の起動イベントで、起動時の CLAUDE_PROJECT_DIR にしか効かない
+# ＝1 プロセス内で worker に「コンテキストスイッチ」しても再発火しない。運用は
+# 「1 repo = 1 セッション」（worker 作業は worker を cwd にした別セッションで起動）を前提とし、
+# その代わり supervisor 起動時に配下 worker の状態（未コミット WIP / Memory Bank 充足）を
+# 一覧表示して dispatch 判断を助ける。supervisor 宣言（CLAUDE.md の workers_dir）がある repo のみ。
+workers_dir=""
+if [ -f "$proj/CLAUDE.md" ]; then
+  workers_dir="$(grep -oE 'workers_dir:[[:space:]]*[A-Za-z0-9._/-]+' "$proj/CLAUDE.md" 2>/dev/null | head -n1 | sed -E 's/.*workers_dir:[[:space:]]*//' || true)"
+fi
+# role 判定 1 行（1 箇所で全 worker/supervisor に明示。worker は既定動作なので per-worker の
+# CLAUDE.md 契約を作らず、ここで中央から役割を宣言する）。役割は構造で決まる:
+#  - 自分の CLAUDE.md に workers_dir 宣言 → supervisor。
+#  - 祖先に workers_dir 宣言があり、その配下に自分が含まれる（親パス経由で起動）→ worker。
+#  - どちらでもない（実パス直接起動など）→ standalone＝role 行は出さない（無関係な MB を汚さない）。
+role=""
+if [ -n "$workers_dir" ] && [ -d "$proj/$workers_dir" ]; then
+  role="supervisor"
+else
+  anc="$proj"
+  for _ in 1 2 3 4 5 6; do
+    anc="$(dirname "$anc")"
+    [ "$anc" = "/" ] || [ "$anc" = "." ] && break
+    [ -f "$anc/CLAUDE.md" ] || continue
+    wd="$(grep -oE 'workers_dir:[[:space:]]*[A-Za-z0-9._/-]+' "$anc/CLAUDE.md" 2>/dev/null | head -n1 | sed -E 's/.*workers_dir:[[:space:]]*//' || true)"
+    [ -n "$wd" ] || continue
+    case "$proj/" in "$anc/$wd/"*) role="worker"; break ;; esac
+  done
+fi
+if [ "$role" = "supervisor" ]; then
+  msg="${msg}"$'\n\n'"役割: supervisor（workers_dir=${workers_dir}）。配下を俯瞰し interrupt で下り dispatch、各 worker の outbox を pull 回収する（権限は非対称＝下り許可・上り禁止）。worker の中身は worker 側セッションで進める。"
+elif [ "$role" = "worker" ]; then
+  msg="${msg}"$'\n\n'"役割: worker（既定）。flow の開発内ループ（開発→自己点検→commit）で自走し、親の正本は直接編集しない（上り禁止）。親へ上げたい事は自分の outbox/ に積む（pull 型・supervisor が回収）。"
+fi
+
+if [ -n "$workers_dir" ] && [ -d "$proj/$workers_dir" ]; then
+  roll=""
+  for w in "$proj/$workers_dir"/*; do
+    [ -e "$w" ] || continue
+    wname="$(basename "$w")"
+    if git -C "$w" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+      wn="$(git -C "$w" status --porcelain 2>/dev/null | grep -c . || true)"
+    else
+      wn="?"
+    fi
+    mbstat="MB:ok"
+    wmb=""
+    [ -d "$w/.work/skills/flow-memory-bank" ] && wmb="$w/.work/skills/flow-memory-bank"
+    if [ -n "$wmb" ]; then
+      for f in $core; do [ -f "$wmb/$f.md" ] || { mbstat="MB:不完全"; break; }; done
+    else
+      mbstat="MB:なし"
+    fi
+    roll="${roll}"$'\n'"  - ${wname}: 未コミット ${wn} 件 / ${mbstat}"
+  done
+  if [ -n "$roll" ]; then
+    append_log "SessionStart proj=$proj WORKERS rollup"
+    msg="${msg}"$'\n\n'"ワーカー状況（supervisor 起動時 roll-up。worker 作業は worker を cwd にした別セッションで）:""${roll}"
+  fi
+fi
+
+# jq に依存せず、JSON 文字列として最低限のエスケープ（\ と " と改行）を行う。
 esc=${msg//\\/\\\\}
 esc=${esc//\"/\\\"}
+esc=${esc//$'\n'/\\n}
 printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"%s"}}\n' "$esc"
