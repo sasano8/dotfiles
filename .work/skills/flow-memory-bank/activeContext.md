@@ -9,7 +9,20 @@
 - **M006「deep think（俯瞰品質ゲート）」実装完了**（前サイクル）。flow 内ループを 2 ゲートで挟み、算法は [[unit-quality]]・
   配置/戻し回数/WIP 退避は [[flow]] に分離。今サイクルの M005 はこの deep think を実地で回した（着手前計画＋最終反証）。
 - supervisor roll-up: manystore は clean・outbox なし・既投函 dispatch 未取り込み（待ちは想定どおり）。
-- 次サイクル候補: M007（MB コア OKF 化・low）、M003（検証コマンド整備）。
+- **2026-06-23 interrupt 取り込み → 振り分け**（ユーザー対話で 3 件投入）:
+  - タスク1+2「S3 ゲートウェイ＋ backend=s3 パススルー」= manystore の機能 → **下り dispatch 済**
+    （`workers/manystore` の `interrupt/20260623-s3-gateway-and-passthrough.md`・priority normal・要設計先行）。
+  - タスク3「エージェント間通信のスケール化（排他＋ローカル外）」= flow/role の通信基盤＝自分のメタ作業 →
+    **M009 として backlog 化**（progress.md・priority low・要設計）。manystore（local/nats/s3 抽象）とのシナジー要検討。
+- **2026-06-23 interrupt 取り込み（2 巡目）→ 振り分け**（ユーザーが「ストレージテストのオープン化」と「オープンテスト
+  *プラットフォーム*」を明確に別タスクと指定）:
+  - タスクA「ストレージ適合性テスト（共通 IF の契約スイート／再利用可能形）」= テストの中身 → **manystore へ下り dispatch 済**
+    （`interrupt/20260623-storage-conformance-test-suite.md`・normal・設計先行）。
+  - タスクB「オープンテスト・プラットフォーム（受験側がクレデンシャル送付→テストエージェント起動→WebSocket トンネル
+    →プラットフォームからテストリクエスト→受験側エージェントで実行）」= 配送/トンネル基盤 → **M010 として backlog 化**
+    （low・要設計）。M009（agent 通信）とトンネル基盤が重なる可能性／対象に manystore S3 GW も含み得る。
+- 次サイクル候補: M007（MB コア OKF 化・low）、M003（検証コマンド整備）、M009（agent 通信・low/要設計）、
+  M010（オープンテスト基盤・low/要設計・新規）。
 
 ## 旧フォーカス（2026-06-22・M004 系）
 - **worker 越境の機械強制（guard）＋スキル taxonomy の合意**。manystore（worker）セッションでスキル更新を命じた
