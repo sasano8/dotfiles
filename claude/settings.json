@@ -6,7 +6,18 @@
     "allow": [
       "Read(.work/skills/flow-memory-bank/**)",
       "Edit(.work/skills/flow-memory-bank/**)",
-      "Write(.work/skills/flow-memory-bank/**)"
+      "Write(.work/skills/flow-memory-bank/**)",
+      "Bash(make format:*)",
+      "Bash(make format-check:*)",
+      "Bash(make check:*)",
+      "Bash(make test:*)",
+      "Bash(make lint:*)",
+      "Bash(make pylint:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git branch:*)"
     ]
   },
   "hooks": {
